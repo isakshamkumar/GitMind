@@ -67,5 +67,5 @@ export async function generate(input: string) {
         stream.done();
     })();
 
-    return { output: stream.value, filesReferenced: result.map(r => r.fileName) };
+    return { output: stream.value, filesReferenced: result };
 }

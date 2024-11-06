@@ -4,6 +4,8 @@ import { ExternalLink, Github } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import AskQuestionCard from './ask-question-card'
+import CommitLog from './commit-log'
+import MeetingCard from './meeting-card'
 
 const DashboardPage = () => {
     const { project } = useProject()
@@ -11,14 +13,14 @@ const DashboardPage = () => {
     return (
         <div>
             <div className="flex items-center justify-between">
-                <div className="w-fit rounded-md bg-gray-900 px-4 py-3">
+                <div className="w-fit rounded-md bg-primary px-4 py-3">
                     <div className="flex items-center">
                         <Github className="h-5 w-5 text-white" />
                         <div className="ml-2">
                             <p className="text-sm font-medium text-white">
                                 This project is linked to{" "}
                                 <Link
-                                    className="inline-flex items-center text-gray-300 hover:underline"
+                                    className="inline-flex items-center text-white/80 hover:underline"
                                     href={project?.githubUrl ?? ''}
                                 >
                                     {project?.githubUrl}
@@ -39,13 +41,11 @@ const DashboardPage = () => {
             <div className="mt-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
                     <AskQuestionCard />
-                    {/* <MeetingCard project={project} /> */}
-                    meetingcard
+                    <MeetingCard />
                 </div>
             </div>
             <div className="mt-8">
-                {/* <CommitLog project={project} /> */}
-                commitlog
+                <CommitLog />
             </div>
         </div>
     )
