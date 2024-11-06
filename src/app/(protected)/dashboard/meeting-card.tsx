@@ -1,4 +1,6 @@
 "use client";
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 import axios from "axios";
 import { PlusIcon, Presentation, Upload } from "lucide-react";
 import React from "react";
@@ -82,27 +84,39 @@ const MeetingCard = () => {
                 {...getRootProps()}
                 className="col-span-2 flex flex-col items-center justify-center rounded-lg border bg-white p-10"
             >
-                <Presentation className="h-10 w-10 animate-bounce" />
-                <h3 className="mt-2 text-sm font-semibold text-gray-900">
-                    Create a new meeting
-                </h3>
-                <p className="mt-1 text-center text-sm text-gray-500">
-                    Analyse your meeting with Dionysus.
-                    <br />
-                    Powered by AI.
-                </p>
-                <div className="mt-6">
-                    <Button isLoading={isUploading}>
-                        <Upload className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
-                        Upload Meeting
-                        <input className="hidden" {...getInputProps()} />
-                    </Button>
-                </div>
+                {!isUploading && (
+                    <>
+                        <Presentation className="h-10 w-10 animate-bounce" />
+                        <h3 className="mt-2 text-sm font-semibold text-gray-900">
+                            Create a new meeting
+                        </h3>
+                        <p className="mt-1 text-center text-sm text-gray-500">
+                            Analyse your meeting with Dionysus.
+                            <br />
+                            Powered by AI.
+                        </p>
+                        <div className="mt-6">
+                            <Button isLoading={isUploading}>
+                                <Upload className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+                                Upload Meeting
+                                <input className="hidden" {...getInputProps()} />
+                            </Button>
+                        </div>
+                    </>
+                )}
                 {isUploading && (
-                    <p className="mt-3 text-center text-xs text-gray-500">
-                        Uploading and processing meeting... <br />
-                        This may take a few minutes...
-                    </p>
+                    <div>
+                        <CircularProgressbar value={progress} text={`${Math.round(progress)}%`} className='size-20'
+                            styles={buildStyles({
+                                pathColor: '#2563eb',
+                                textColor: '#2563eb'
+                            })}
+                        />
+                        <p className="mt-3 text-center text-xs text-gray-500">
+                            Uploading and processing meeting... <br />
+                            This may take a few minutes...
+                        </p>
+                    </div>
                 )}
             </Card>
         </>

@@ -7,12 +7,16 @@ import { Label } from '@/components/ui/label'
 import { api, RouterOutputs } from '@/trpc/react'
 import React from 'react'
 import { toast } from 'sonner'
+import { askMeeting } from '../../meetings/action'
+import { readStreamableValue } from 'ai/rsc'
+import MDEditor from '@uiw/react-md-editor'
 
 type Props = {
     issue: NonNullable<RouterOutputs['meeting']['getMeetingDetails']>['issues'][number]
 }
 
 const IssueCard = ({ issue }: Props) => {
+    const [isLoading, setIsLoading] = React.useState(false);
     const [open, setOpen] = React.useState(false);
     const [query, setQuery] = React.useState("");
     const [answer, setAnswer] = React.useState("");
@@ -21,20 +25,15 @@ const IssueCard = ({ issue }: Props) => {
 
     const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
         e.preventDefault();
-        toast.promise(
-            askIssue.mutateAsync({
-                issueId: issue.id,
-                query,
-            }),
-            {
-                loading: "Asking question...",
-                success: ({ answer }) => {
-                    setQuery("");
-                    return "Thank you Dionysus!";
-                },
-                error: "Failed to ask question",
-            },
-        );
+        setIsLoading(true)
+        setAnswer("")
+        const { output } = await askMeeting(query, issue.summary ?? "");
+        for await (const delta of readStreamableValue(output)) {
+            if (delta) {
+                setAnswer(prev => prev + delta);
+            }
+        }
+        setIsLoading(false)
     };
 
     return (
@@ -69,11 +68,11 @@ const IssueCard = ({ issue }: Props) => {
                             {answer && (
                                 <>
                                     <p className="mt-2 text-xs font-semibold">Answer</p>
-                                    <pre className="whitespace-pre-wrap text-sm">{answer}</pre>
+                                    <MDEditor.Markdown source={answer} className='flex-1 w-full !h-full max-h-[40vh] overflow-scroll custom-ref' />
                                 </>
                             )}
                         </div>
-                        <Button isLoading={askIssue.isPending} className="mt-3 w-full">
+                        <Button isLoading={isLoading} className="mt-3 w-full">
                             Ask Question
                         </Button>
                     </form>

@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         // get the embeddings
         const embeddings = await Promise.all(docs.map(async (doc) => {
             const embedding = await getEmbeddings(doc.pageContent)
-            return embedding
+            return { embedding, content: doc.pageContent }
         }))
 
         const limit = pLimit(10);
@@ -45,12 +45,13 @@ export async function POST(req: NextRequest) {
                 const meetingEmbedding = await db.meetingEmbedding.create({
                     data: {
                         meetingId,
+                        content: embedding.content
                     }
                 })
 
                 await db.$executeRaw`
         UPDATE "MeetingEmbedding"
-        SET "embedding" = ${embedding}::vector
+        SET "embedding" = ${embedding.embedding}::vector
         WHERE id = ${meetingEmbedding.id}`;
 
             })

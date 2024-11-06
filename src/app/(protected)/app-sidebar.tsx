@@ -136,9 +136,7 @@ export function AppSidebar() {
                     </>
                 )}
             </SidebarContent>
-            <SidebarFooter >
-                {/* <UserButton /> */}
-            </SidebarFooter>
+
         </Sidebar>
     )
 }

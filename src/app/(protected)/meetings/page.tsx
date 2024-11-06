@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-react'
 
 const MeetingsPage = () => {
     const { project } = useProject()
-    const { data: meetings } = api.project.getAllMeetings.useQuery({ projectId: project?.id ?? '' }, {
+    const { data: meetings, isLoading } = api.project.getAllMeetings.useQuery({ projectId: project?.id ?? '' }, {
         refetchInterval: 4000
     })
     return (
@@ -22,6 +22,11 @@ const MeetingsPage = () => {
             <h1 className="text-xl font-semibold text-gray-800">All Meetings</h1>
             {meetings && meetings.length === 0 && (
                 <div className="text-sm text-gray-500">No meetings yet</div>
+            )}
+            {isLoading && (
+                <div className="mt-4">
+                    <Loader2 className="animate-spin" />
+                </div>
             )}
             <ul role="list" className="divide-y divide-gray-200">
                 {meetings?.map((meeting) => (
@@ -40,12 +45,7 @@ const MeetingsPage = () => {
                                 </Link>
                                 {meeting.status === "PROCESSING" && (
                                     <Badge className='bg-yellow-500 text-white'>
-                                        Processing <Loader2 className='animate-spin' />
-                                    </Badge>
-                                )}
-                                {meeting.status === "COMPLETED" && (
-                                    <Badge className='bg-green-500 text-white'>
-                                        Completed
+                                        Processing <Loader2 className='animate-spin size-3 ml-1' />
                                     </Badge>
                                 )}
                             </div>

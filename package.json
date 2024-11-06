@@ -79,6 +79,7 @@
     "openai": "^4.68.4",
     "p-limit": "^6.1.0",
     "react": "19.0.0-rc-02c0e824-20241028",
+    "react-circular-progressbar": "^2.1.0",
     "react-day-picker": "8.10.1",
     "react-dom": "19.0.0-rc-02c0e824-20241028",
     "react-dropzone": "^14.3.5",

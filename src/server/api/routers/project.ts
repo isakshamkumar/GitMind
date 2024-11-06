@@ -53,6 +53,9 @@ export const projectRouter = createTRPCRouter({
       include: {
         issues: true,
       },
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
   }),
   uploadMeeting: protectedProcedure.input(z.object({ projectId: z.string(), audio_url: z.string(), name: z.string() })).mutation(async ({ ctx, input }) => {
@@ -60,7 +63,8 @@ export const projectRouter = createTRPCRouter({
       data: {
         projectId: input.projectId,
         url: input.audio_url,
-        name: input.name
+        name: input.name,
+        createdById: ctx.user.userId!,
       },
     });
     return meeting;
