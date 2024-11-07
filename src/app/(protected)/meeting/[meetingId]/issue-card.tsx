@@ -27,7 +27,7 @@ const IssueCard = ({ issue }: Props) => {
         e.preventDefault();
         setIsLoading(true)
         setAnswer("")
-        const { output } = await askMeeting(query, issue.summary ?? "");
+        const { output } = await askMeeting(query, issue.summary ?? "", issue.meetingId);
         for await (const delta of readStreamableValue(output)) {
             if (delta) {
                 setAnswer(prev => prev + delta);

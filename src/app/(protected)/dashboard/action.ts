@@ -10,7 +10,7 @@ const google = createGoogleGenerativeAI({
     apiKey: process.env.GEMINI_API_KEY,
 });
 
-export async function generate(input: string) {
+export async function generate(input: string, projectId: string) {
     const stream = createStreamableValue('');
 
 
@@ -26,6 +26,7 @@ export async function generate(input: string) {
       FROM "SourceCodeEmbedding"
       where 1 - ("summaryEmbedding" <=> ${vectorQuery}::vector) > .5
       ORDER BY  similarity DESC
+      WHERE "projectId" = ${projectId}
       LIMIT 10;
     ` as { fileName: string, sourceCode: string, summary: string }[];
     let context = '';

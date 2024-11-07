@@ -28,10 +28,11 @@ const AskQuestionCard = (props: Props) => {
     const answerRef = React.useRef<MarkdownPreviewRef>(null)
     const [filesReferenced, setFilesReferenced] = React.useState<Awaited<ReturnType<typeof generate>>['filesReferenced']>([])
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        if (!projectId) return
         setAnswer('')
         e.preventDefault()
         setIsLoading(true)
-        const { output, filesReferenced } = await generate(question)
+        const { output, filesReferenced } = await generate(question, projectId)
         setOpen(true)
         setFilesReferenced(filesReferenced)
         for await (const delta of readStreamableValue(output)) {
