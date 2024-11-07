@@ -23,7 +23,7 @@ export async function askMeeting(input: string, quote: string, meetingId: string
         1 - ("embedding" <=> ${vectorQuery}::vector) as similarity
       FROM "MeetingEmbedding"
       WHERE 1 - ("embedding" <=> ${vectorQuery}::vector) > .45
-      AND WHERE "meetingId" = ${meetingId}
+      AND "meetingId" = ${meetingId}
       ORDER BY similarity DESC
       LIMIT 10;
     ` as { content: string }[];

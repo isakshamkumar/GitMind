@@ -25,7 +25,7 @@ export async function generate(input: string, projectId: string) {
         1 - ("summaryEmbedding" <=> ${vectorQuery}::vector) as similarity
       FROM "SourceCodeEmbedding"
       WHERE 1 - ("summaryEmbedding" <=> ${vectorQuery}::vector) > .5
-      AND WHERE "projectId" = ${projectId}
+      AND "projectId" = ${projectId}
       ORDER BY  similarity DESC
       LIMIT 10;
     ` as { fileName: string, sourceCode: string, summary: string }[];
