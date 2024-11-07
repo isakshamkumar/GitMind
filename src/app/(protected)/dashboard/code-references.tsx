@@ -16,9 +16,9 @@ const CodeReferences = ({ filesReferenced }: Props) => {
     const [tab, setTab] = React.useState(filesReferenced[0]?.fileName)
     if (!filesReferenced.length) return null
     return (
-        <>
+        <div className="max-w-[70vw]">
             <Tabs defaultValue={tab} value={tab} onValueChange={(value) => setTab(value)}>
-                <div className="max-w-7xl overflow-scroll scrollbar-hide flex gap-2 bg-gray-200 p-1 rounded-md">
+                <div className="overflow-scroll scrollbar-hide flex gap-2 bg-gray-200 p-1 rounded-md">
                     {filesReferenced.map((file) => (
                         <button
                             key={file.fileName}
@@ -42,7 +42,7 @@ const CodeReferences = ({ filesReferenced }: Props) => {
                 ))}
             </Tabs>
 
-        </>
+        </div>
     )
 }
 

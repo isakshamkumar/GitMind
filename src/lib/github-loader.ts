@@ -1,7 +1,7 @@
 import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
 import pLimit from 'p-limit'
-import { getEmbeddings, getSummary } from "./gemini";
-// import { getEmbeddings, getSummary } from "./openai";
+import { getEmbeddings } from "./gemini";
+import { getSummary } from "./openai";
 import { exit } from "process";
 import { db } from "@/server/db";
 
@@ -13,6 +13,7 @@ export const loadGithubRepo = async (githubUrl: string) => {
             ignoreFiles: ['package-lock.json', 'bun.lockb'],
             recursive: true,
             // recursive: false,
+            accessToken: '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',
             unknown: "warn",
             maxConcurrency: 5, // Defaults to 2
         }
@@ -25,7 +26,7 @@ export const indexGithubRepo = async (projectId: string, githubUrl: string) => {
     const docs = await loadGithubRepo(githubUrl);
     const allEmbeddings = await generateEmbeddings(docs)
     const limit = pLimit(10);
-    await Promise.all(
+    await Promise.allSettled(
         allEmbeddings.map((embedding, index) =>
             limit(async () => {
                 console.log(`processing ${index} of ${allEmbeddings.length}`);

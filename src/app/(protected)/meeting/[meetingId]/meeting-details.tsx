@@ -1,6 +1,6 @@
 'use client'
 import { api } from '@/trpc/react'
-import { Presentation } from 'lucide-react'
+import { Loader2, Presentation } from 'lucide-react'
 import React from 'react'
 import IssueCard from './issue-card'
 import CopyButton from './copy-button'
@@ -11,7 +11,7 @@ type Props = {
 
 const MeetingDetails = ({ meetingId }: Props) => {
     const { data: meeting, isLoading } = api.meeting.getMeetingDetails.useQuery({ meetingId })
-    if (!meeting) return null
+    if (isLoading || !meeting) return <div><Loader2 className='animate-spin' /></div>
     return (
         <>
             <div className="p-8">

@@ -15,14 +15,25 @@ import React from 'react'
 import CodeReferences from "../dashboard/code-references"
 import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
+import { Loader2 } from "lucide-react"
+import AskQuestionCard from "../dashboard/ask-question-card"
 
 const QuestionList = () => {
   const { projectId } = useProject()
-  const { data: questions } = api.question.getAllQuestions.useQuery({ projectId })
+  const { data: questions, isLoading } = api.question.getAllQuestions.useQuery({ projectId })
   const [questionIdx, setQuestionIdx] = React.useState(0)
   const question = questions?.[questionIdx]
+  if (isLoading) {
+    return <div>
+      <Loader2 className="animate-spin" />
+    </div>
+  }
   return (
     <Sheet>
+      <AskQuestionCard />
+      <div className="h-4"></div>
+      <h1 className="text-xl font-semibold text-gray-800">Saved Questions</h1>
+      <div className="h-2"></div>
       <div className="grid gap-2 grid-cols-1 sm:grid-cols-1">
         {questions?.map((question, idx) => (
           <React.Fragment key={question.id}>

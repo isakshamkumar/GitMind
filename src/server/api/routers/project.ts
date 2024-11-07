@@ -32,10 +32,14 @@ export const projectRouter = createTRPCRouter({
       await indexGithubRepo(project.id, input.githubUrl);
       return project;
     }),
+  archiveProject: protectedProcedure.input(z.object({ projectId: z.string() })).mutation(async ({ ctx, input }) => {
+    await ctx.db.project.update({ where: { id: input.projectId }, data: { deletedAt: new Date() } });
+  }),
   getAll: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.project.findMany({
       where: {
         userToProjects: { some: { userId: ctx.user.userId! } },
+        deletedAt: null,
       },
     });
   }),
@@ -52,6 +56,7 @@ export const projectRouter = createTRPCRouter({
       where: { projectId: input.projectId },
       include: {
         issues: true,
+        createdBy: true,
       },
       orderBy: {
         createdAt: 'desc'

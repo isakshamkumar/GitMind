@@ -3,7 +3,9 @@ import axios from "axios";
 import { Octokit } from "octokit";
 import { aiSummariseCommit } from "./gemini";
 
-const octokit = new Octokit();
+const octokit = new Octokit({
+    auth: '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'
+});
 // id                 String   @id @default(cuid())
 // commitMessage      String
 // commitHash         String

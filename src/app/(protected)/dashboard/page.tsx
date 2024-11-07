@@ -6,6 +6,7 @@ import React from 'react'
 import AskQuestionCard from './ask-question-card'
 import CommitLog from './commit-log'
 import MeetingCard from './meeting-card'
+import ArchiveButton from './archive-button'
 
 const DashboardPage = () => {
     const { project } = useProject()
@@ -32,10 +33,11 @@ const DashboardPage = () => {
                 </div>
                 <div className="mt-4 flex items-center">
                     {/* <InviteButton projectId={project.id} /> */}
-                    invitebutton
+                    {/* invitebutton */}
                     <div className="w-4"></div>
                     {/* <TeamMembers projectId={project.id} users={project.users} /> */}
-                    teammemmbers
+                    {/* teammemmbers */}
+                    <ArchiveButton />
                 </div>
             </div>
             <div className="mt-4">

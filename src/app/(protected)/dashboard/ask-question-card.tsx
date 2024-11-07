@@ -59,7 +59,7 @@ const AskQuestionCard = (props: Props) => {
                         <DialogTitle>
                             <Image src="/logo.png" alt="Logo" width={40} height={40} />
                         </DialogTitle>
-                        <Button isLoading={saveAnswer.isPending} variant="outline" onClick={() => {
+                        <Button isLoading={saveAnswer.isPending || isLoading} variant="outline" onClick={() => {
                             saveAnswer.mutate({
                                 projectId,
                                 question,
@@ -77,7 +77,7 @@ const AskQuestionCard = (props: Props) => {
                             <DownloadIcon className="w-4 h-4" />
                             Save Answer</Button>
                     </div>
-                    <MDEditor.Markdown source={answer} className='flex-1 w-full !h-full max-h-[40vh] overflow-scroll custom-ref' />
+                    <MDEditor.Markdown source={answer} className='max-w-[70vw] !h-full max-h-[40vh] overflow-scroll custom-ref' />
                     <CodeReferences filesReferenced={filesReferenced} />
                     <Button onClick={() => setOpen(false)}>Close</Button>
                 </DialogContent>
