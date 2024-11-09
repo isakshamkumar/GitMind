@@ -1,17 +1,35 @@
 import { z } from "zod";
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { pollRepo } from "@/lib/github";
-import { indexGithubRepo } from "@/lib/github-loader";
-import { processMeeting } from "@/lib/assembly";
-import { getEmbeddings } from "@/lib/gemini";
-import pLimit from "p-limit";
+import { checkCredits, indexGithubRepo, loadGithubRepo } from "@/lib/github-loader";
 
 export const projectRouter = createTRPCRouter({
+  getMyCredits: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! } })
+    return user?.credits || 0
+  }),
+
+  checkCredits: protectedProcedure.input(z.object({ githubUrl: z.string().min(1), githubToken: z.string().optional() })).
+    mutation(async ({ ctx, input }) => {
+      const fileCount = await checkCredits(input.githubUrl, input.githubToken)
+      const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! } })
+      return {
+        credits: user?.credits || 0,
+        fileCount,
+      }
+    }),
+
   create: protectedProcedure
-    .input(z.object({ name: z.string().min(1), githubUrl: z.string().min(1) }))
+    .input(z.object({ name: z.string().min(1), githubUrl: z.string().min(1), githubToken: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
+
+      const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! } })
+      if (!user) throw new Error("User not found")
+      const currentCredits = user.credits || 0
+      const fileCount = await checkCredits(input.githubUrl, input.githubToken)
+      if (currentCredits < fileCount) throw new Error("Not enough credits")
+
       const project = await ctx.db.$transaction(async (tx) => {
         const createdProject = await tx.project.create({
           data: {
@@ -29,7 +47,9 @@ export const projectRouter = createTRPCRouter({
 
         return createdProject;
       });
-      await indexGithubRepo(project.id, input.githubUrl);
+      await indexGithubRepo(project.id, input.githubUrl, input.githubToken);
+      await pollRepo(project.id)
+      await ctx.db.user.update({ where: { id: ctx.user.userId! }, data: { credits: { decrement: fileCount } } })
       return project;
     }),
   archiveProject: protectedProcedure.input(z.object({ projectId: z.string() })).mutation(async ({ ctx, input }) => {
@@ -76,5 +96,11 @@ export const projectRouter = createTRPCRouter({
   }),
   deleteMeeting: protectedProcedure.input(z.object({ meetingId: z.string() })).mutation(async ({ ctx, input }) => {
     await ctx.db.meeting.delete({ where: { id: input.meetingId } });
+  }),
+  getMembers: protectedProcedure.input(z.object({ projectId: z.string() })).query(async ({ ctx, input }) => {
+    return await ctx.db.userToProject.findMany({ where: { projectId: input.projectId }, include: { user: true } });
+  }),
+  getStripeTransactions: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db.stripeTransaction.findMany({ where: { userId: ctx.user.userId! } });
   }),
 });

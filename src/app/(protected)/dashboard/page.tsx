@@ -7,13 +7,15 @@ import AskQuestionCard from './ask-question-card'
 import CommitLog from './commit-log'
 import MeetingCard from './meeting-card'
 import ArchiveButton from './archive-button'
+import InviteButton from './invite-button'
+import TeamMembers from './team-members'
 
 const DashboardPage = () => {
     const { project } = useProject()
 
     return (
         <div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-y-4">
                 <div className="w-fit rounded-md bg-primary px-4 py-3">
                     <div className="flex items-center">
                         <Github className="h-5 w-5 text-white" />
@@ -31,12 +33,10 @@ const DashboardPage = () => {
                         </div>
                     </div>
                 </div>
-                <div className="mt-4 flex items-center">
-                    {/* <InviteButton projectId={project.id} /> */}
-                    {/* invitebutton */}
-                    <div className="w-4"></div>
-                    {/* <TeamMembers projectId={project.id} users={project.users} /> */}
-                    {/* teammemmbers */}
+                <div className="h-4"></div>
+                <div className="flex items-center gap-4">
+                    <TeamMembers />
+                    <InviteButton />
                     <ArchiveButton />
                 </div>
             </div>

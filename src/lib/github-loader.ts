@@ -4,8 +4,59 @@ import { getEmbeddings } from "./gemini";
 import { getSummary } from "./openai";
 import { exit } from "process";
 import { db } from "@/server/db";
+import { Octokit } from "octokit";
+const getFileCount = async (path: string, octokit: Octokit, githubOwner: string, githubRepo: string, acc: number = 0) => {
+    const { data } = await octokit.rest.repos.getContent({
+        owner: githubOwner,
+        repo: githubRepo,
+        path: path
+    })
 
-export const loadGithubRepo = async (githubUrl: string) => {
+    if (!Array.isArray(data) && data.type === 'file') {
+        return acc + 1
+    }
+
+    if (Array.isArray(data)) {
+        let fileCount = 0
+        const directories: string[] = []
+
+        // Count files and collect directories in current level
+        for (const item of data) {
+            if (item.type === 'dir') {
+                directories.push(item.path)
+            } else {
+                fileCount += 1
+            }
+        }
+
+        // Process all directories at this level in parallel
+        if (directories.length > 0) {
+            const directoryCounts = await Promise.all(
+                directories.map(dirPath =>
+                    getFileCount(dirPath, octokit, githubOwner, githubRepo, 0)
+                )
+            )
+            fileCount += directoryCounts.reduce((sum, count) => sum + count, 0)
+        }
+
+        return acc + fileCount
+    }
+
+    return acc
+}
+
+export const checkCredits = async (githubUrl: string, githubToken?: string) => {
+    const octokit = new Octokit({
+        auth: githubToken || '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',
+    });
+    const githubOwner = githubUrl.split('/')[3]
+    const githubRepo = githubUrl.split('/')[4]
+    if (!githubOwner || !githubRepo) return 0
+    const fileCount = await getFileCount('', octokit, githubOwner, githubRepo, 0)
+    return fileCount
+}
+
+export const loadGithubRepo = async (githubUrl: string, githubToken?: string) => {
     const loader = new GithubRepoLoader(
         githubUrl,
         {
@@ -13,7 +64,7 @@ export const loadGithubRepo = async (githubUrl: string) => {
             ignoreFiles: ['package-lock.json', 'bun.lockb'],
             recursive: true,
             // recursive: false,
-            accessToken: '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',
+            accessToken: githubToken || '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',
             unknown: "warn",
             maxConcurrency: 5, // Defaults to 2
         }
@@ -22,8 +73,8 @@ export const loadGithubRepo = async (githubUrl: string) => {
     return docs
 };
 
-export const indexGithubRepo = async (projectId: string, githubUrl: string) => {
-    const docs = await loadGithubRepo(githubUrl);
+export const indexGithubRepo = async (projectId: string, githubUrl: string, githubToken?: string) => {
+    const docs = await loadGithubRepo(githubUrl, githubToken);
     const allEmbeddings = await generateEmbeddings(docs)
     const limit = pLimit(10);
     await Promise.allSettled(
