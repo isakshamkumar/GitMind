@@ -1,5 +1,5 @@
 import { db } from '@/server/db';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { notFound, redirect } from 'next/navigation';
 
 type Props = { params: Promise<{ projectId: string }> }
@@ -7,13 +7,32 @@ type Props = { params: Promise<{ projectId: string }> }
 const JoinPage = async ({ params }: Props) => {
     const { projectId } = await params
     const { userId } = await auth();
-    const user = await db.user.findUnique({
+    const dbUser = await db.user.findUnique({
         where: {
             id: userId ?? "",
         },
     });
-    if (!user) {
-        return redirect("/sync-user");
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId ?? "")
+
+    if (!dbUser) {
+        await db.user.upsert({
+            where: {
+                emailAddress: user.emailAddresses[0]?.emailAddress ?? ""
+            },
+            update: {
+                imageUrl: user.imageUrl,
+                firstName: user.firstName,
+                lastName: user.lastName
+            },
+            create: {
+                id: userId ?? "",
+                emailAddress: user.emailAddresses[0]?.emailAddress ?? "",
+                imageUrl: user.imageUrl,
+                firstName: user.firstName,
+                lastName: user.lastName
+            }
+        })
     }
 
     const project = await db.project.findUnique({

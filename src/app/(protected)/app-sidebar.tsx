@@ -37,11 +37,6 @@ const items = [
         icon: Bot,
     },
     {
-        title: "Files",
-        url: "/files",
-        icon: FolderTree,
-    },
-    {
         title: "Meetings",
         url: "/meetings",
         icon: Presentation,
