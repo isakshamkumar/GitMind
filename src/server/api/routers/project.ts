@@ -27,6 +27,8 @@ export const projectRouter = createTRPCRouter({
       const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! } })
       if (!user) throw new Error("User not found")
       const currentCredits = user.credits || 0
+      console.log("token in checkCredits =>", input.githubToken || process.env.GITHUB_TOKEN);
+
       const fileCount = await checkCredits(input.githubUrl, input.githubToken)
       if (currentCredits < fileCount) throw new Error("Not enough credits")
 

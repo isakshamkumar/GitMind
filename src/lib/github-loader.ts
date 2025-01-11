@@ -46,11 +46,14 @@ const getFileCount = async (path: string, octokit: Octokit, githubOwner: string,
 }
 
 export const checkCredits = async (githubUrl: string, githubToken?: string) => {
+    console.log("checking credits for", githubToken);
     const octokit = new Octokit({
-        auth: githubToken || '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',
+        auth: githubToken || process.env.GITHUB_TOKEN,
     });
+    console.log("checking credits for", githubUrl);
     const githubOwner = githubUrl.split('/')[3]
     const githubRepo = githubUrl.split('/')[4]
+    console.log("owner", githubOwner, "repo", githubRepo);
     if (!githubOwner || !githubRepo) return 0
     const fileCount = await getFileCount('', octokit, githubOwner, githubRepo, 0)
     return fileCount
@@ -64,7 +67,7 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string) =>
             ignoreFiles: ['package-lock.json', 'bun.lockb'],
             recursive: true,
             // recursive: false,
-            accessToken: githubToken || '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',
+            accessToken: githubToken || process.env.GITHUB_TOKEN,
             unknown: "warn",
             maxConcurrency: 5, // Defaults to 2
         }
