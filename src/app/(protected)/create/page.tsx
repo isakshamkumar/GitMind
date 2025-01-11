@@ -25,6 +25,10 @@ const CreateProjectPage = () => {
 
     const router = useRouter()
     const onSubmit = async (data: FormInput) => {
+        if (!data.githubToken) {
+            toast.error("Please provide a GitHub token");
+            return;
+        }
         if (!!!checkCredits.data) {
             checkCredits.mutate({
                 githubUrl: data.repoUrl,
@@ -87,7 +91,7 @@ const CreateProjectPage = () => {
                         <Input
                             icon={Key}
                             {...register("githubToken")}
-                            placeholder="GitHub Token (optional, for private repositories)"
+                            placeholder="GitHub Token (Required)"
                         />
 
                         {!!checkCredits.data &&
