@@ -91,7 +91,7 @@ const CreateProjectPage = () => {
                         <Input
                             icon={Key}
                             {...register("githubToken")}
-                            placeholder="GitHub Token (Required)"
+                            placeholder="GitHub Token (Required with all privilages)"
                         />
 
                         {!!checkCredits.data &&
