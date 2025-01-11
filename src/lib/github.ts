@@ -4,7 +4,7 @@ import { Octokit } from "octokit";
 import { aiSummariseCommit } from "./gemini";
 
 const octokit = new Octokit({
-    auth: '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'
+    auth: process.env.GITHUB_TOKEN,
 });
 // id                 String   @id @default(cuid())
 // commitMessage      String
@@ -26,6 +26,8 @@ export const getCommitHashes = async (
     githubUrl: string,
 ): Promise<response[]> => {
     const [owner, repo] = githubUrl.split("/").slice(3, 5);
+    console.log("owner", owner, "repo", repo);
+    
     if (!owner || !repo) {
         throw new Error("Invalid github url")
     }
