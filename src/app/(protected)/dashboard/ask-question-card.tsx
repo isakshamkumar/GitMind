@@ -87,7 +87,7 @@ const AskQuestionCard = (props: Props) => {
                 <CardHeader>
                     <CardTitle>Ask a question</CardTitle>
                     <CardDescription>
-                        Dionysus has knowledge of the codebase
+                        GitMind has knowledge of the codebase
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -98,7 +98,7 @@ const AskQuestionCard = (props: Props) => {
                             onChange={(e) => setQuestion(e.target.value)}
                         />
                         <Button isLoading={isLoading} className="mt-4">
-                            Ask Dionysus!
+                            Ask GitMind!
                         </Button>
                     </form>
                 </CardContent>
