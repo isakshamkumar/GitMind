@@ -10,7 +10,7 @@ const Logo = () => {
             {open && (
                 <span className="text-xl font-bold">
                     <span className="text-primary/80">
-                        Dionysus
+                        GitMind
                     </span>
                 </span>
             )}
