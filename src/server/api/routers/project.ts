@@ -49,8 +49,13 @@ export const projectRouter = createTRPCRouter({
 
         return createdProject;
       });
+      console.log('indexing repo...')
+      
       await indexGithubRepo(project.id, input.githubUrl, input.githubToken);
+      console.log('repo indexed')
+      console.log('polling repo...')
       await pollRepo(project.id)
+      console.log('repo polled')
       await ctx.db.user.update({ where: { id: ctx.user.userId! }, data: { credits: { decrement: fileCount } } })
       return project;
     }),

@@ -69,7 +69,7 @@ const CreateProjectPage = () => {
                     <p className='text-sm text-muted-foreground'>
                         Enter the URL of your GitHub repository to link it to GitMind.
                     </p>
-                </div>
+                </div>  
                 <div className="h-4"></div>
                 <div>
                     <form onSubmit={handleSubmit(onSubmit)}>
