@@ -25,8 +25,10 @@ const CreateProjectPage = () => {
 
     const router = useRouter()
     const onSubmit = async (data: FormInput) => {
-        if (!data.githubToken) {
-            toast.error("Please provide a GitHub token");
+        console.log('onSubmit', data);
+        
+        if (!data.repoUrl.startsWith('https://github.com/')) {
+            toast.error("Please enter a valid GitHub repository URL");
             return;
         }
         if (!!!checkCredits.data) {
@@ -34,8 +36,14 @@ const CreateProjectPage = () => {
                 githubUrl: data.repoUrl,
                 githubToken: data.githubToken,
             }, {
-                onError: () => {
-                    toast.error("GitHub API rate limit exceeded, please try again later.");
+                onError: (error) => {
+                    if (error.message.includes("Bad credentials")) {
+                        toast.error("Invalid GitHub token. Please check your token has correct permissions.");
+                    } else if (error.message.includes("Not Found")) {
+                        toast.error("Repository not found or no access. Please check the URL and token permissions.");
+                    } else {
+                        toast.error("Failed to check repository access. Please try again.");
+                    }
                 },
             })
         } else {
@@ -89,10 +97,11 @@ const CreateProjectPage = () => {
                         />
                         <div className="h-2"></div>
                         <Input
-                            icon={Key}
-                            {...register("githubToken")}
-                            placeholder="GitHub Token (Required with all privilages)"
-                        />
+    icon={Key}
+    {...register("githubToken")}
+    placeholder="GitHub Token (Required with repo and contents access)"
+    required        // Add this to make it mandatory
+/>
 
                         {!!checkCredits.data &&
                             <>

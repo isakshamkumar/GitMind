@@ -24,6 +24,7 @@ type response = {
 
 export const getCommitHashes = async (
     githubUrl: string,
+    githubToken?: string // Add token parameter
 ): Promise<response[]> => {
     const [owner, repo] = githubUrl.split("/").slice(3, 5);
     console.log("owner", owner, "repo", repo);
@@ -31,52 +32,98 @@ export const getCommitHashes = async (
     if (!owner || !repo) {
         throw new Error("Invalid github url")
     }
-    const { data } = await octokit.rest.repos.listCommits({
-        owner,
-        repo,
-    })
-    //   need commit author, commit message, commit hash and commit time
-    const sortedCommits = data.sort(
-        (a: any, b: any) =>
-            new Date(b.commit.author.date).getTime() -
-            new Date(a.commit.author.date).getTime(),
-    ) as any[];
 
-    return sortedCommits.slice(0, 15).map((commit: any) => ({
-        commitHash: commit.sha as string,
-        commitMessage: commit.commit.message ?? "",
-        commitAuthorName: commit.commit?.author?.name ?? "",
-        commitAuthorAvatar: commit.author?.avatar_url ?? "",
-        commitDate: commit.commit?.author?.date ?? "",
-    }));
+    try {
+        // Use provided token or fallback to env token
+        const client = new Octokit({
+            auth: githubToken || process.env.GITHUB_TOKEN,
+        });
+
+        // Check rate limit before making request
+        const { data: rateLimit } = await client.rest.rateLimit.get();
+        if (rateLimit.resources.core.remaining < 10) {
+            console.log(`Rate limit low (${rateLimit.resources.core.remaining}), waiting...`);
+            const resetTime = rateLimit.resources.core.reset * 1000;
+            const waitTime = resetTime - Date.now();
+            if (waitTime > 0) {
+                await new Promise(resolve => setTimeout(resolve, waitTime + 1000));
+            }
+        }
+
+        const { data } = await client.rest.repos.listCommits({
+            owner,
+            repo,
+            per_page: 5,
+            page: 1
+        });
+
+        return data.map((commit: any) => ({
+            commitHash: commit.sha as string,
+            commitMessage: commit.commit.message ?? "",
+            commitAuthorName: commit.commit?.author?.name ?? "",
+            commitAuthorAvatar: commit.author?.avatar_url ?? "",
+            commitDate: commit.commit?.author?.date ?? "",
+        }));
+    } catch (error: any) {
+        if (error.status === 403 && error.message.includes('rate limit')) {
+            console.log('Rate limit hit, waiting 60s before retry...');
+            await new Promise(resolve => setTimeout(resolve, 60000));
+            return getCommitHashes(githubUrl, githubToken);
+        }
+        throw error;
+    }
 };
 
-export const pollRepo = async (projectId: string) => {
-    const { project, githubUrl } = await fetchProjectGitHubUrl(projectId);
-    const commitHases = await getCommitHashes(project?.githubUrl ?? "");
-    const unprocessedCommits = await filterUnprocessedCommits(projectId, commitHases);
-    const summariesResponse = await Promise.allSettled(
-        unprocessedCommits.map((hash) => {
-            return summariseCommit(githubUrl, hash.commitHash);
-        }),
-    );
-    const summaries = summariesResponse.map((summary) => {
-        if (summary.status === "fulfilled") {
-            return summary.value as string;
+export const pollRepo = async (projectId: string, githubToken?: string) => {
+    try {
+        const { project, githubUrl } = await fetchProjectGitHubUrl(projectId);
+        
+        console.log("Starting repository polling...");
+        const commitHashes = await getCommitHashes(project?.githubUrl ?? "", githubToken);
+        console.log(`Found ${commitHashes.length} commits`);
+        
+        // Get only unprocessed commits
+        const unprocessedCommits = await filterUnprocessedCommits(projectId, commitHashes);
+        console.log(`Processing ${unprocessedCommits.length} new commits`);
+        
+        if (unprocessedCommits.length === 0) {
+            console.log("No new commits to process");
+            return [];
         }
-    });
-    const commits = await db.commit.createMany({
-        data: summaries.map((summary, idx) => ({
-            projectId: projectId,
-            commitHash: unprocessedCommits[idx]!.commitHash,
-            summary: summary!,
-            commitAuthorName: unprocessedCommits[idx]!.commitAuthorName,
-            commitDate: unprocessedCommits[idx]!.commitDate,
-            commitMessage: unprocessedCommits[idx]!.commitMessage,
-            commitAuthorAvatar: unprocessedCommits[idx]!.commitAuthorAvatar,
-        })),
-    });
-    return commits;
+
+        // Process commits one at a time with delay
+        const results = [];
+        for (const commit of unprocessedCommits) {
+            try {
+                console.log(`Processing commit: ${commit.commitHash.slice(0, 7)}`);
+                const summary = await summariseCommit(githubUrl, commit.commitHash, githubToken);
+                
+                const savedCommit = await db.commit.create({
+                    data: {
+                        projectId,
+                        commitHash: commit.commitHash,
+                        summary: summary || commit.commitMessage,
+                        commitAuthorName: commit.commitAuthorName,
+                        commitDate: commit.commitDate,
+                        commitMessage: commit.commitMessage,
+                        commitAuthorAvatar: commit.commitAuthorAvatar,
+                    }
+                });
+                results.push(savedCommit);
+                
+                // Add longer delay between commits (5 seconds)
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            } catch (error) {
+                console.error(`Failed to process commit ${commit.commitHash.slice(0, 7)}:`, error);
+                continue; // Skip failed commit and continue with others
+            }
+        }
+
+        return results;
+    } catch (error) {
+        console.error('Error in pollRepo:', error);
+        throw error;
+    }
 };
 
 async function fetchProjectGitHubUrl(projectId: string) {
@@ -91,18 +138,44 @@ async function fetchProjectGitHubUrl(projectId: string) {
     return { project, githubUrl };
 }
 
-async function summariseCommit(githubUrl: string, commitHash: string) {
-    const { data } = await axios.get(
-        `${githubUrl}/commit/${commitHash}.diff`,
-        {
-            headers: {
-                Accept: "application/vnd.github.v3.diff",
-            },
+async function summariseCommit(githubUrl: string, commitHash: string, githubToken?: string) {
+    try {
+        console.log("summarising commit", githubUrl, commitHash);
+        
+        githubUrl = githubUrl.replace('.git', '');
+        const [owner, repo] = githubUrl.split("/").slice(3, 5);
+        
+        if (!owner || !repo) {
+            throw new Error(`Invalid GitHub URL: ${githubUrl}`);
         }
-    );
-    return await aiSummariseCommit(data) || ""
-}
 
+        // Use the GitHub API endpoint for commit comparison with proper auth
+        const { data } = await axios.get(
+            `https://api.github.com/repos/${owner}/${repo}/commits/${commitHash}`,
+            {
+                headers: {
+                    Accept: "application/vnd.github.v3+json",
+                    Authorization: `Bearer ${githubToken || process.env.GITHUB_TOKEN}`,
+                }
+            }
+        );
+        
+        // Extract the diff from the files array
+        const diffs = data.files?.map((file: any) => 
+            `diff --git a/${file.filename} b/${file.filename}\n${file.patch || ''}`
+        ).join('\n') || '';
+
+        console.log('Successfully fetched diff for commit:', commitHash.slice(0, 7));
+        return await aiSummariseCommit(diffs) || "";
+    } catch (error: any) {
+        if (error.response?.status === 403) {
+            console.error('Rate limit or authentication error:', error.response.data.message);
+            return "";
+        }
+        console.error('Error fetching commit diff:', error);
+        return "";
+    }
+}
 async function filterUnprocessedCommits(projectId: string, commitHases: response[]) {
     const processedCommits = await db.commit.findMany({
         where: {

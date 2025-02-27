@@ -89,7 +89,7 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
-	},
-	plugins: [require("tailwindcss-animate"), require('tailwind-scrollbar-hide')
+	},	
+	plugins: [require("tailwindcss-animate"), require('tailwind-scrollbar-hide'), require('@tailwindcss/typography')
 	],
 } satisfies Config;
