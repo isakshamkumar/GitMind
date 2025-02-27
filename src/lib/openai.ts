@@ -1,9 +1,9 @@
 import { OpenAI } from 'openai'
 import { loadGithubRepo } from './github-loader'
-
 export const openAI = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 })
+
 
 export const getSummary = async (doc: Awaited<ReturnType<typeof loadGithubRepo>>[number]) => {
     console.log("getting summary for", doc.metadata.source);
@@ -23,7 +23,8 @@ Here is the code:
 ---
 ${code}
 ---
-Give a summary no more than 100 words of the code above`,
+###CRITICAL SUMMARY COMMENTS:
+Give a summary no more than 250-300 words of the code above, make sure u highlight all the important parts/pieces of code. That can include function/class names, methods, their uses, input / output. Their flow and what it does, and all the keypoints of the code.`,
             },
         ],
     });

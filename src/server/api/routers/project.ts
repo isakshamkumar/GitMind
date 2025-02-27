@@ -12,6 +12,8 @@ export const projectRouter = createTRPCRouter({
 
   checkCredits: protectedProcedure.input(z.object({ githubUrl: z.string().min(1), githubToken: z.string().optional() })).
     mutation(async ({ ctx, input }) => {
+      console.log('checkCredits', input);
+      
       const fileCount = await checkCredits(input.githubUrl, input.githubToken)
       const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! } })
       return {
@@ -27,7 +29,7 @@ export const projectRouter = createTRPCRouter({
       const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! } })
       if (!user) throw new Error("User not found")
       const currentCredits = user.credits || 0
-      console.log("token in checkCredits =>", input.githubToken || process.env.GITHUB_TOKEN);
+      console.log("token in checkCredits =>", input.githubToken );
 
       const fileCount = await checkCredits(input.githubUrl, input.githubToken)
       if (currentCredits < fileCount) throw new Error("Not enough credits")
@@ -54,8 +56,8 @@ export const projectRouter = createTRPCRouter({
       await indexGithubRepo(project.id, input.githubUrl, input.githubToken);
       console.log('repo indexed')
       console.log('polling repo...')
-      await pollRepo(project.id)
-      console.log('repo polled')
+      await pollRepo(project.id, input.githubToken);
+            console.log('repo polled')
       await ctx.db.user.update({ where: { id: ctx.user.userId! }, data: { credits: { decrement: fileCount } } })
       return project;
     }),
@@ -78,7 +80,7 @@ export const projectRouter = createTRPCRouter({
       where: { projectId: input.projectId },
     });
   }),
-  getAllMeetings: protectedProcedure.input(z.object({ projectId: z.string() })).query(async ({ ctx, input }) => {
+  getAllMeetings: protectedProcedure.input(z.object({ projectId: z.string() })).query(async ({ ctx, input }) => {//
     return await ctx.db.meeting.findMany({
       where: { projectId: input.projectId },
       include: {
