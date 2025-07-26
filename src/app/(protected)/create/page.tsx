@@ -77,7 +77,7 @@ const CreateProjectPage = () => {
                     setIsCreating(false);
                     toast.success("Project created successfully");
                     setProjectId(createdProject.id); // Set the project ID in localStorage
-                    router.push(`/dashboard`)
+                    router.push(`/dashboard?project=${createdProject.id}`)
                     refetch()
                     reset()
                 },

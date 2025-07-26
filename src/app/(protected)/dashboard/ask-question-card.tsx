@@ -11,6 +11,7 @@ import { readStreamableValue } from 'ai/rsc'
 import CodeReferences from './code-references';
 import Image from 'next/image';
 import { DownloadIcon, MessageCircle, Send, User, Bot, Sparkles, Code2, Copy, CheckCircle } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { api } from '@/trpc/react';
 import useProject from '@/hooks/use-project';
 import { toast } from 'sonner';
@@ -151,8 +152,8 @@ const ChatCard = (props: Props) => {
                     // Don't clear chat when closing
                 }
             }}>
-                <DialogContent className='sm:max-w-[95vw] max-w-[95vw] h-[90vh] overflow-hidden'>
-                    <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+                <DialogContent className='sm:max-w-[95vw] max-w-[95vw] h-[95vh] overflow-hidden flex flex-col'>
+                    <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b flex-shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -189,179 +190,202 @@ const ChatCard = (props: Props) => {
                         </div>
                     </DialogHeader>
                     
-                    <div className="grid grid-cols-3 gap-6 h-[calc(90vh-120px)]">
-                        {/* Chat Area */}
-                        <div className="col-span-2 flex flex-col h-full">
-                            <div 
-                                ref={chatContainerRef}
-                                className="flex-1 overflow-y-auto p-4 space-y-6 bg-muted/20 rounded-lg border"
-                            >
-                                {chatHistory.length === 0 && (
-                                    <div className="flex items-center justify-center h-full">
-                                        <div className="text-center space-y-4">
-                                            <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center">
-                                                <Sparkles className="h-8 w-8 text-white" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-semibold mb-2">Welcome to GitMind Chat</h3>
-                                                <p className="text-muted-foreground text-sm max-w-sm">
-                                                    Ask me anything about your codebase. I can help you understand functions, 
-                                                    debug issues, or explain complex code patterns.
-                                                </p>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 justify-center">
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    onClick={() => setMessage("What are the main components in this project?")}
-                                                    className="text-xs"
-                                                >
-                                                    Project overview
-                                                </Button>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    onClick={() => setMessage("How does authentication work?")}
-                                                    className="text-xs"
-                                                >
-                                                    Authentication
-                                                </Button>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    onClick={() => setMessage("Show me the API endpoints")}
-                                                    className="text-xs"
-                                                >
-                                                    API endpoints
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                <AnimatePresence>
-                                    {chatHistory.map((msg, index) => (
-                                        <motion.div 
-                                            key={msg.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20 }}
-                                            transition={{ duration: 0.3, delay: index * 0.1 }}
-                                            className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                        >
-                                            {msg.role === 'assistant' && (
-                                                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <Bot className="w-4 h-4 text-white" />
+                    <div className="flex-1 min-h-0">
+                        <ResizablePanelGroup direction="horizontal" className="h-full">
+                            {/* Chat Area */}
+                            <ResizablePanel defaultSize={65} minSize={40}>
+                                <div className="flex flex-col h-full min-h-0 pr-3">
+                                    <div 
+                                        ref={chatContainerRef}
+                                        className="flex-1 overflow-y-auto p-4 space-y-6 bg-muted/20 rounded-lg border min-h-0"
+                                    >
+                                        {chatHistory.length === 0 && (
+                                            <div className="flex items-center justify-center h-full">
+                                                <div className="text-center space-y-4">
+                                                    <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center">
+                                                        <Sparkles className="h-8 w-8 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-lg font-semibold mb-2">Welcome to GitMind Chat</h3>
+                                                        <p className="text-muted-foreground text-sm max-w-sm">
+                                                            Ask me anything about your codebase. I can help you understand functions, 
+                                                            debug issues, or explain complex code patterns.
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 justify-center">
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => setMessage("What are the main components in this project?")}
+                                                            className="text-xs"
+                                                        >
+                                                            Project overview
+                                                        </Button>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm"
+                                                            onClick={() => setMessage("How does authentication work?")}
+                                                            className="text-xs"
+                                                        >
+                                                            Authentication
+                                                        </Button>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm"
+                                                            onClick={() => setMessage("Show me the API endpoints")}
+                                                            className="text-xs"
+                                                        >
+                                                            API endpoints
+                                                        </Button>
+                                                    </div>
                                                 </div>
-                                            )}
-                                            <div className={`group max-w-[80%] ${
-                                                msg.role === 'user' 
-                                                    ? 'bg-primary text-primary-foreground ml-12' 
-                                                    : 'bg-card border border-border'
-                                            } rounded-2xl overflow-hidden`}>
-                                                <div className="p-4">
-                                                    {msg.role === 'user' ? (
-                                                        <div className="space-y-1">
-                                                            <p className="text-sm leading-relaxed">{msg.content}</p>
-                                                            <div className="flex items-center justify-between text-xs opacity-70">
-                                                                <span>You</span>
-                                                                <span>{formatTime(msg.timestamp)}</span>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="space-y-3">
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-sm font-medium">GitMind Assistant</span>
-                                                                    {msg.content && (
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            onClick={() => copyMessage(msg.content, msg.id)}
-                                                                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                        >
-                                                                            {copiedMessageId === msg.id ? (
-                                                                                <CheckCircle className="w-3 h-3 text-green-500" />
-                                                                            ) : (
-                                                                                <Copy className="w-3 h-3" />
-                                                                            )}
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-                                                                <span className="text-xs text-muted-foreground">{formatTime(msg.timestamp)}</span>
-                                                            </div>
-                                                            {msg.content ? (
-                                                                <MDEditor.Markdown 
-                                                                    source={msg.content} 
-                                                                    className='prose prose-sm dark:prose-invert max-w-none'
-                                                                    style={{ 
-                                                                        backgroundColor: 'transparent',
-                                                                        fontSize: '0.875rem'
-                                                                    }}
-                                                                />
-                                                            ) : (
-                                                                isLoading && msg.id === chatHistory[chatHistory.length - 1]?.id && (
-                                                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                                                        <div className="flex space-x-1">
-                                                                            <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                                                                            <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                                                                            <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                                                                        </div>
-                                                                        <span className="text-sm">Thinking...</span>
-                                                                    </div>
-                                                                )
-                                                            )}
+                                            </div>
+                                        )}
+                                        
+                                        <AnimatePresence>
+                                            {chatHistory.map((msg, index) => (
+                                                <motion.div 
+                                                    key={msg.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -20 }}
+                                                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                                                    className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                                >
+                                                    {msg.role === 'assistant' && (
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                                            <Bot className="w-4 h-4 text-white" />
                                                         </div>
                                                     )}
-                                                </div>
+                                                    <div className={`group max-w-[80%] ${
+                                                        msg.role === 'user' 
+                                                            ? 'bg-primary text-primary-foreground ml-12' 
+                                                            : 'bg-card border border-border'
+                                                    } rounded-2xl overflow-hidden`}>
+                                                        <div className="p-4">
+                                                            {msg.role === 'user' ? (
+                                                                <div className="space-y-1">
+                                                                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                                                                    <div className="flex items-center justify-between text-xs opacity-70">
+                                                                        <span>You</span>
+                                                                        <span>{formatTime(msg.timestamp)}</span>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="space-y-3">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-sm font-medium">GitMind Assistant</span>
+                                                                            {msg.content && (
+                                                                                <Button
+                                                                                    variant="ghost"
+                                                                                    size="sm"
+                                                                                    onClick={() => copyMessage(msg.content, msg.id)}
+                                                                                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                                >
+                                                                                    {copiedMessageId === msg.id ? (
+                                                                                        <CheckCircle className="w-3 h-3 text-green-500" />
+                                                                                    ) : (
+                                                                                        <Copy className="w-3 h-3" />
+                                                                                    )}
+                                                                                </Button>
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="text-xs text-muted-foreground">{formatTime(msg.timestamp)}</span>
+                                                                    </div>
+                                                                    {msg.content ? (
+                                                                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                                                                            <MDEditor.Markdown 
+                                                                                source={msg.content} 
+                                                                                style={{ 
+                                                                                    backgroundColor: 'transparent',
+                                                                                    fontSize: '0.875rem'
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    ) : (
+                                                                        isLoading && msg.id === chatHistory[chatHistory.length - 1]?.id && (
+                                                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                                                <div className="flex space-x-1">
+                                                                                    <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                                                                    <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                                                                    <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                                                                                </div>
+                                                                                <span className="text-sm">Thinking...</span>
+                                                                            </div>
+                                                                        )
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {msg.role === 'user' && (
+                                                        <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                                                            <User className="w-4 h-4" />
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            ))}
+                                        </AnimatePresence>
+                                    </div>
+                                    
+                                    {/* Chat Input - Fixed at bottom */}
+                                    <div className="mt-4 flex-shrink-0">
+                                        <form onSubmit={handleSubmit} className="w-full">
+                                            <div className="flex gap-3 p-3 bg-muted/50 rounded-lg border w-full">
+                                                <textarea
+                                                    placeholder="Ask anything about your codebase..."
+                                                    value={message}
+                                                    onChange={(e) => setMessage(e.target.value)}
+                                                    disabled={isLoading}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                            handleSubmit(e as any);
+                                                        }
+                                                    }}
+                                                    className="flex-1 min-w-0 border-0 bg-transparent focus-visible:outline-none focus-visible:ring-0 text-sm resize-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                                                    rows={1}
+                                                    style={{ 
+                                                        minHeight: '36px',
+                                                        maxHeight: '120px',
+                                                        lineHeight: '1.5'
+                                                    }}
+                                                />
+                                                <Button 
+                                                    type="submit" 
+                                                    disabled={isLoading || !message.trim()}
+                                                    size="sm"
+                                                    className="h-9 w-9 p-0 flex-shrink-0"
+                                                >
+                                                    <Send className="w-4 h-4" />
+                                                </Button>
                                             </div>
-                                            {msg.role === 'user' && (
-                                                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <User className="w-4 h-4" />
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    ))}
-                                </AnimatePresence>
-                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </ResizablePanel>
                             
-                            {/* Chat Input */}
-                            <form onSubmit={handleSubmit} className="mt-4">
-                                <div className="flex gap-3 p-3 bg-muted/50 rounded-lg border">
-                                    <Input
-                                        placeholder="Ask anything about your codebase..."
-                                        value={message}
-                                        onChange={(e) => setMessage(e.target.value)}
-                                        disabled={isLoading}
-                                        className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-sm"
-                                    />
-                                    <Button 
-                                        type="submit" 
-                                        disabled={isLoading || !message.trim()}
-                                        size="sm"
-                                        className="h-9 w-9 p-0"
-                                    >
-                                        <Send className="w-4 h-4" />
-                                    </Button>
+                            <ResizableHandle withHandle />
+                            
+                            {/* Referenced Files */}
+                            <ResizablePanel defaultSize={35} minSize={25}>
+                                <div className="flex flex-col h-full min-h-0 pl-3">
+                                    <div className="flex items-center justify-between mb-3 pb-2 border-b flex-shrink-0">
+                                        <div className="flex items-center gap-2">
+                                            <Code2 className="h-4 w-4 text-muted-foreground" />
+                                            <h3 className="text-sm font-medium">Referenced Files</h3>
+                                        </div>
+                                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                                            {filesReferenced.length}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 border rounded-lg bg-card overflow-hidden min-h-0">
+                                        <CodeReferences filesReferenced={filesReferenced} />
+                                    </div>
                                 </div>
-                            </form>
-                        </div>
-
-                        {/* Referenced Files */}
-                        <div className="flex flex-col h-full">
-                            <div className="flex items-center justify-between mb-3 pb-2 border-b">
-                                <div className="flex items-center gap-2">
-                                    <Code2 className="h-4 w-4 text-muted-foreground" />
-                                    <h3 className="text-sm font-medium">Referenced Files</h3>
-                                </div>
-                                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                                    {filesReferenced.length}
-                                </span>
-                            </div>
-                            <div className="flex-1 border rounded-lg bg-card overflow-hidden">
-                                <CodeReferences filesReferenced={filesReferenced} />
-                            </div>
-                        </div>
+                            </ResizablePanel>
+                        </ResizablePanelGroup>
                     </div>
                 </DialogContent>
             </Dialog>

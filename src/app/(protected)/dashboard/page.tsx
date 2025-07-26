@@ -12,9 +12,16 @@ import RepositoryAnalysis from './repository-analysis'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { api } from '@/trpc/react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { FileText, Code2, Target } from 'lucide-react'
 
 const DashboardPage = () => {
-    const { project } = useProject()
+    const { project, projectId } = useProject()
+    const { data: stats, isLoading: statsLoading } = api.project.getRepositoryStats.useQuery(
+        { projectId },
+        { enabled: !!projectId }
+    )
 
     if (!project) {
         return (
@@ -30,6 +37,12 @@ const DashboardPage = () => {
         )
     }
 
+    const formatNumber = (num: number) => {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+        return num.toString()
+    }
+
     return (
         <div className="space-y-6">
             {/* Project Header */}
@@ -41,11 +54,11 @@ const DashboardPage = () => {
                             AI-powered analysis of your GitHub repository with comprehensive insights
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                         <TeamMembers />
                         <InviteButton />
                         <ArchiveButton />
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Repository Info Card */}
@@ -115,12 +128,66 @@ const DashboardPage = () => {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-center">
-                                    <p className="text-muted-foreground">Repository analysis loading...</p>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        Switch to the Analysis tab for detailed insights
-                                    </p>
-                                </div>
+                                {statsLoading ? (
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-4 w-20" />
+                                            <Skeleton className="h-8 w-16" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-4 w-24" />
+                                            <Skeleton className="h-8 w-20" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-4 w-16" />
+                                            <Skeleton className="h-6 w-12" />
+                                        </div>
+                                    </div>
+                                ) : stats ? (
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                                    <FileText className="h-4 w-4" />
+                                                    Total Files
+                                                </div>
+                                                <div className="text-2xl font-bold">{formatNumber(stats.totalFiles)}</div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                                    <Code2 className="h-4 w-4" />
+                                                    Lines of Code
+                                                </div>
+                                                <div className="text-2xl font-bold">{formatNumber(stats.totalLines)}</div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                                <Target className="h-4 w-4" />
+                                                Complexity
+                                            </div>
+                                            <Badge variant="outline" className={
+                                                stats.codeQuality.complexity === 'Low' ? 'text-green-600 border-green-200' :
+                                                stats.codeQuality.complexity === 'Medium' ? 'text-yellow-600 border-yellow-200' :
+                                                'text-red-600 border-red-200'
+                                            }>
+                                                {stats.codeQuality.complexity}
+                                            </Badge>
+                                        </div>
+                                        <div className="pt-2 border-t">
+                                            <p className="text-xs text-muted-foreground">
+                                                Switch to the Analysis tab for detailed insights
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center">
+                                        <p className="text-muted-foreground">Repository analysis not available</p>
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                            Switch to the Analysis tab for detailed insights
+                                        </p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>

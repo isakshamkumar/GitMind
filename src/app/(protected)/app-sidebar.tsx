@@ -96,7 +96,7 @@ export function AppSidebar() {
                                             <div 
                                                 onClick={() => {
                                                     setProjectId(project.id)
-                                                    router.push(`/dashboard`)
+                                                    router.push(`/dashboard?project=${project.id}`)
                                                 }} 
                                                 className={cn("flex items-center gap-3 flex-1 cursor-pointer", {
                                                     'cursor-pointer': true,

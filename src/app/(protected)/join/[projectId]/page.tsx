@@ -54,7 +54,7 @@ const JoinPage = async ({ params }: Props) => {
     } catch (error) {
         console.log('user already in project')
     }
-    return redirect(`/dashboard`);
+    return redirect(`/dashboard?project=${projectId}`);
 }
 
 export default JoinPage
