@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
 import TopLoader from "@/components/top-loader";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
@@ -19,11 +20,18 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${GeistSans.variable}`}>
+      <html lang="en" className={`${GeistSans.variable}`} suppressHydrationWarning>
         <body>
-          <TopLoader />
-          <TRPCReactProvider>{children}</TRPCReactProvider>
-          <Toaster richColors />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <TopLoader />
+            <TRPCReactProvider>{children}</TRPCReactProvider>
+            <Toaster richColors />
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -10,41 +10,137 @@ import { generate } from './action'
 import { readStreamableValue } from 'ai/rsc'
 import CodeReferences from './code-references';
 import Image from 'next/image';
-import { DownloadIcon } from 'lucide-react';
+import { DownloadIcon, MessageCircle, Send, User, Bot, Sparkles, Code2, Copy, CheckCircle } from 'lucide-react';
 import { api } from '@/trpc/react';
 import useProject from '@/hooks/use-project';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { motion, AnimatePresence } from 'motion/react';
 
 type Props = {}
 
-const AskQuestionCard = (props: Props) => {
+interface ChatMessage {
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: Date;
+    filesReferenced?: Awaited<ReturnType<typeof generate>>['filesReferenced'];
+}
+
+const ChatCard = (props: Props) => {
     const [open, setOpen] = React.useState(false)
-    const [question, setQuestion] = React.useState('')
+    const [message, setMessage] = React.useState('')
     const [isLoading, setIsLoading] = React.useState(false)
-    const [answer, setAnswer] = React.useState('')
+    const [chatHistory, setChatHistory] = React.useState<ChatMessage[]>([])
+    const [copiedMessageId, setCopiedMessageId] = React.useState<string | null>(null)
     const saveAnswer = api.question.saveAnswer.useMutation()
     const { projectId } = useProject()
 
-    const answerRef = React.useRef<MarkdownPreviewRef>(null)
+    const chatContainerRef = React.useRef<HTMLDivElement>(null)
     const [filesReferenced, setFilesReferenced] = React.useState<Awaited<ReturnType<typeof generate>>['filesReferenced']>([])
+
+    const scrollToBottom = () => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }
+
+    React.useEffect(() => {
+        scrollToBottom();
+    }, [chatHistory, isLoading]);
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        if (!projectId) return
-        setAnswer('')
+        if (!projectId || !message.trim()) return
+        
         e.preventDefault()
-        setIsLoading(true)
-        const { output, filesReferenced } = await generate(question, projectId)
-        setOpen(true)
-        setFilesReferenced(filesReferenced)
-        for await (const delta of readStreamableValue(output)) {
-            if (delta) {
-                setAnswer(prev => prev + delta);
-                const el = document.querySelector('.custom-ref')
-                if (el) {
-                    el.scrollTop = el.scrollHeight;
+        
+        const userMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: 'user',
+            content: message,
+            timestamp: new Date()
+        };
+
+        setChatHistory(prev => [...prev, userMessage]);
+        setMessage('');
+        setIsLoading(true);
+
+        // Add placeholder for assistant response
+        const assistantMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: '',
+            timestamp: new Date()
+        };
+        setChatHistory(prev => [...prev, assistantMessage]);
+
+        try {
+            const { output, filesReferenced } = await generate(userMessage.content, projectId);
+            setFilesReferenced(filesReferenced);
+            
+            let accumulatedContent = '';
+            for await (const delta of readStreamableValue(output)) {
+                if (delta) {
+                    accumulatedContent += delta;
+                    setChatHistory(prev => 
+                        prev.map(msg => 
+                            msg.id === assistantMessage.id 
+                                ? { ...msg, content: accumulatedContent, filesReferenced }
+                                : msg
+                        )
+                    );
                 }
             }
+        } catch (error) {
+            setChatHistory(prev => 
+                prev.map(msg => 
+                    msg.id === assistantMessage.id 
+                        ? { ...msg, content: '❌ Sorry, I encountered an error processing your message. Please try again.' }
+                        : msg
+                )
+            );
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false)
+    }
+
+    const clearChat = () => {
+        setChatHistory([]);
+        setFilesReferenced([]);
+    }
+
+    const copyMessage = async (content: string, messageId: string) => {
+        await navigator.clipboard.writeText(content);
+        setCopiedMessageId(messageId);
+        setTimeout(() => setCopiedMessageId(null), 2000);
+        toast.success('Message copied to clipboard');
+    }
+
+    const saveCurrentChat = () => {
+        if (chatHistory.length === 0) return;
+        
+        const lastUserMessage = chatHistory.filter(msg => msg.role === 'user').slice(-1)[0];
+        const lastAssistantMessage = chatHistory.filter(msg => msg.role === 'assistant').slice(-1)[0];
+        
+        if (lastUserMessage && lastAssistantMessage) {
+            saveAnswer.mutate({
+                projectId,
+                question: lastUserMessage.content,
+                answer: lastAssistantMessage.content,
+                filesReferenced: lastAssistantMessage.filesReferenced || []
+            }, {
+                onSuccess: () => toast.success('Chat saved to Q&A'),
+                onError: () => toast.error('Failed to save chat')
+            });
+        }
+    }
+
+    const formatTime = (date: Date) => {
+        return new Intl.DateTimeFormat('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).format(date);
     }
 
     return (
@@ -52,104 +148,257 @@ const AskQuestionCard = (props: Props) => {
             <Dialog open={open} onOpenChange={(open) => {
                 setOpen(open)
                 if (!open) {
-                    setQuestion('')
+                    // Don't clear chat when closing
                 }
             }}>
-                <DialogContent className='sm:max-w-[90vw] h-[85vh] overflow-hidden'>
-                    <div className="flex items-center justify-between gap-2 mb-4">
+                <DialogContent className='sm:max-w-[95vw] max-w-[95vw] h-[90vh] overflow-hidden'>
+                    <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                                    <Sparkles className="h-5 w-5 text-white" />
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-lg font-semibold">GitMind Assistant</DialogTitle>
+                                <p className="text-sm text-muted-foreground">AI-powered code analysis</p>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-2">
-                            <DialogTitle>
-                                <Image src="/logo.png" alt="Logo" width={40} height={40} />
-                            </DialogTitle>
                             <Button 
-                                isLoading={saveAnswer.isPending || isLoading} 
                                 variant="outline" 
-                                onClick={() => {
-                                    saveAnswer.mutate({
-                                        projectId,
-                                        question,
-                                        answer,
-                                        filesReferenced
-                                    }, {
-                                        onSuccess: () => toast.success('Answer saved'),
-                                        onError: () => toast.error('Failed to save answer')
-                                    })
-                                }}
+                                size="sm"
+                                onClick={clearChat}
+                                disabled={chatHistory.length === 0}
+                                className="h-8"
                             >
-                                <DownloadIcon className="w-4 h-4 mr-2" />
-                                Save Answer
+                                Clear
+                            </Button>
+                            <Button 
+                                isLoading={saveAnswer.isPending} 
+                                variant="outline" 
+                                size="sm"
+                                onClick={saveCurrentChat}
+                                disabled={chatHistory.length === 0}
+                                className="h-8"
+                            >
+                                <DownloadIcon className="w-3 h-3 mr-1.5" />
+                                Save
                             </Button>
                         </div>
-                        <Button variant="ghost" onClick={() => setOpen(false)}>Close</Button>
-                    </div>
-                    <div className="mb-1 bg-muted/50 p-2 rounded-lg">
-                        <h4 className="text-sm font-medium text-foreground mb-2">Question</h4>
-                        <p className="text-sm text-foreground/90">{question}</p>
-                    </div>
+                    </DialogHeader>
                     
-                    <div className="grid grid-cols-2 gap-6 h-[calc(85vh-100px)]">
-                        {/* Left side - Answer */}
-                        <div className="flex flex-col h-full">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-medium text-foreground">Answer</h3>
-                                <span className="text-xs text-muted-foreground">AI Generated Response</span>
+                    <div className="grid grid-cols-3 gap-6 h-[calc(90vh-120px)]">
+                        {/* Chat Area */}
+                        <div className="col-span-2 flex flex-col h-full">
+                            <div 
+                                ref={chatContainerRef}
+                                className="flex-1 overflow-y-auto p-4 space-y-6 bg-muted/20 rounded-lg border"
+                            >
+                                {chatHistory.length === 0 && (
+                                    <div className="flex items-center justify-center h-full">
+                                        <div className="text-center space-y-4">
+                                            <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center">
+                                                <Sparkles className="h-8 w-8 text-white" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-semibold mb-2">Welcome to GitMind Chat</h3>
+                                                <p className="text-muted-foreground text-sm max-w-sm">
+                                                    Ask me anything about your codebase. I can help you understand functions, 
+                                                    debug issues, or explain complex code patterns.
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 justify-center">
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    onClick={() => setMessage("What are the main components in this project?")}
+                                                    className="text-xs"
+                                                >
+                                                    Project overview
+                                                </Button>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => setMessage("How does authentication work?")}
+                                                    className="text-xs"
+                                                >
+                                                    Authentication
+                                                </Button>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => setMessage("Show me the API endpoints")}
+                                                    className="text-xs"
+                                                >
+                                                    API endpoints
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <AnimatePresence>
+                                    {chatHistory.map((msg, index) => (
+                                        <motion.div 
+                                            key={msg.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -20 }}
+                                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                                            className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                        >
+                                            {msg.role === 'assistant' && (
+                                                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <Bot className="w-4 h-4 text-white" />
+                                                </div>
+                                            )}
+                                            <div className={`group max-w-[80%] ${
+                                                msg.role === 'user' 
+                                                    ? 'bg-primary text-primary-foreground ml-12' 
+                                                    : 'bg-card border border-border'
+                                            } rounded-2xl overflow-hidden`}>
+                                                <div className="p-4">
+                                                    {msg.role === 'user' ? (
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm leading-relaxed">{msg.content}</p>
+                                                            <div className="flex items-center justify-between text-xs opacity-70">
+                                                                <span>You</span>
+                                                                <span>{formatTime(msg.timestamp)}</span>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-3">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-sm font-medium">GitMind Assistant</span>
+                                                                    {msg.content && (
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            onClick={() => copyMessage(msg.content, msg.id)}
+                                                                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                        >
+                                                                            {copiedMessageId === msg.id ? (
+                                                                                <CheckCircle className="w-3 h-3 text-green-500" />
+                                                                            ) : (
+                                                                                <Copy className="w-3 h-3" />
+                                                                            )}
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-xs text-muted-foreground">{formatTime(msg.timestamp)}</span>
+                                                            </div>
+                                                            {msg.content ? (
+                                                                <MDEditor.Markdown 
+                                                                    source={msg.content} 
+                                                                    className='prose prose-sm dark:prose-invert max-w-none'
+                                                                    style={{ 
+                                                                        backgroundColor: 'transparent',
+                                                                        fontSize: '0.875rem'
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                isLoading && msg.id === chatHistory[chatHistory.length - 1]?.id && (
+                                                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                                                        <div className="flex space-x-1">
+                                                                            <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                                                            <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                                                            <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                                                                        </div>
+                                                                        <span className="text-sm">Thinking...</span>
+                                                                    </div>
+                                                                )
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {msg.role === 'user' && (
+                                                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <User className="w-4 h-4" />
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             </div>
-                            <div className="flex-1 border rounded-lg bg-card relative">
-                                <div className="absolute inset-0 p-6 overflow-y-auto">
-                                    <MDEditor.Markdown 
-                                        source={answer} 
-                                        className='w-full prose prose-sm dark:prose-invert max-w-none custom-ref'
-                                        style={{ 
-                                            backgroundColor: 'transparent',
-                                            fontSize: '0.95rem',
-                                            lineHeight: '1.75',
-                                            color: 'hsl(var(--foreground))',
-                                        }}
-                                        components={{
-                                            code({ children }) {
-                                                return <code className="bg-muted px-1 py-0.5 rounded-sm">{children}</code>
-                                            }
-                                        }}
+                            
+                            {/* Chat Input */}
+                            <form onSubmit={handleSubmit} className="mt-4">
+                                <div className="flex gap-3 p-3 bg-muted/50 rounded-lg border">
+                                    <Input
+                                        placeholder="Ask anything about your codebase..."
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                        disabled={isLoading}
+                                        className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-sm"
                                     />
+                                    <Button 
+                                        type="submit" 
+                                        disabled={isLoading || !message.trim()}
+                                        size="sm"
+                                        className="h-9 w-9 p-0"
+                                    >
+                                        <Send className="w-4 h-4" />
+                                    </Button>
                                 </div>
-                            </div>
+                            </form>
                         </div>
 
-                        {/* Right side - Referenced Files */}
+                        {/* Referenced Files */}
                         <div className="flex flex-col h-full">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-medium text-foreground">Referenced Files</h3>
-                                <span className="text-xs text-muted-foreground">{filesReferenced.length} files</span>
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                                <div className="flex items-center gap-2">
+                                    <Code2 className="h-4 w-4 text-muted-foreground" />
+                                    <h3 className="text-sm font-medium">Referenced Files</h3>
+                                </div>
+                                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                                    {filesReferenced.length}
+                                </span>
                             </div>
-                            <div className="flex-1 border rounded-lg bg-card">
+                            <div className="flex-1 border rounded-lg bg-card overflow-hidden">
                                 <CodeReferences filesReferenced={filesReferenced} />
                             </div>
                         </div>
                     </div>
                 </DialogContent>
             </Dialog>
-            <Card className="relative col-span-3">
+            
+            <Card className="relative group hover:shadow-md transition-all duration-200 border-l-4 border-l-transparent hover:border-l-primary/50">
                 <CardHeader>
-                    <CardTitle>Ask a question</CardTitle>
-                    <CardDescription>
-                        GitMind has knowledge of the codebase
+                    <CardTitle className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <MessageCircle className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                            <span className="text-lg">Start a Conversation</span>
+                            <div className="flex items-center gap-1 mt-1">
+                                <Sparkles className="h-3 w-3 text-yellow-500" />
+                                <span className="text-xs text-muted-foreground">AI-Powered</span>
+                            </div>
+                        </div>
+                    </CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">
+                        Chat with GitMind about your codebase. Get explanations, debug help, and insights 
+                        from your repository&apos;s AI analysis.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit}>
-                        <Textarea
-                            placeholder="Which file should I edit to change the home page?"
-                            value={question}
-                            onChange={(e) => setQuestion(e.target.value)}
-                        />
-                        <Button isLoading={isLoading} className="mt-4">
-                            Ask GitMind!
-                        </Button>
-                    </form>
+                    <Button 
+                        onClick={() => setOpen(true)} 
+                        className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                        size="lg"
+                    >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Open Chat Assistant
+                        <Sparkles className="w-4 h-4 ml-2" />
+                    </Button>
                 </CardContent>
             </Card>
         </>
     )
 }
 
-export default AskQuestionCard
+export default ChatCard

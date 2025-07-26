@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import useProject from "@/hooks/use-project"
 import { Skeleton } from "@/components/ui/skeleton"
+import ProjectActions from "./project-actions"
 
 const items = [
     {
@@ -91,20 +92,39 @@ export function AppSidebar() {
                             {projects?.map((project) => (
                                 <SidebarMenuItem key={project.id}>
                                     <SidebarMenuButton asChild>
-                                        <div onClick={() => {
-                                            setProjectId(project.id)
-                                            router.push(`/dashboard`)
-                                        }} className={cn({
-                                            'cursor-pointer': true,
-                                        })}>
-                                            <div className="">
-                                                <div className={cn("rounded-sm border size-6 flex items-center justify-center text-sm bg-white text-primary", {
-                                                    'bg-primary text-white': projectId === project.id,
-                                                })}>
-                                                    {project.name[0]}
+                                        <div className="flex items-center justify-between w-full group">
+                                            <div 
+                                                onClick={() => {
+                                                    setProjectId(project.id)
+                                                    router.push(`/dashboard`)
+                                                }} 
+                                                className={cn("flex items-center gap-3 flex-1 cursor-pointer", {
+                                                    'cursor-pointer': true,
+                                                })}
+                                            >
+                                                <div className="">
+                                                    <div className={cn("rounded-sm border size-6 flex items-center justify-center text-sm bg-white text-primary", {
+                                                        'bg-primary text-white': projectId === project.id,
+                                                    })}>
+                                                        {project.name[0]}
+                                                    </div>
                                                 </div>
+                                                <span>{project.name}</span>
                                             </div>
-                                            <span>{project.name}</span>
+                                            {open && (
+                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <ProjectActions 
+                                                        projectId={project.id} 
+                                                        projectName={project.name}
+                                                        onProjectDeleted={() => {
+                                                            // If the deleted project was selected, clear selection
+                                                            if (projectId === project.id) {
+                                                                setProjectId('')
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>

@@ -35,7 +35,7 @@ export async function askMeeting(input: string, quote: string, meetingId: string
 
     (async () => {
         const { textStream } = await streamText({
-            model: google('gemini-1.5-pro'),
+            model: google('gemini-2.5-flash'),
             prompt: `
           AI assistant is a brand new, powerful, human-like artificial intelligence. AI will always answer in markdown syntax, with code snippets if needed.
       The traits of AI include expert knowledge, helpfulness, cleverness, and articulateness.

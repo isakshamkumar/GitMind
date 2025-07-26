@@ -3,12 +3,19 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { pollRepo } from "@/lib/github";
 import { checkCredits, indexGithubRepo, loadGithubRepo } from "@/lib/github-loader";
+import { analyzeRepository } from "@/lib/repository-analysis";
 
 export const projectRouter = createTRPCRouter({
   getMyCredits: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! } })
     return user?.credits || 0
   }),
+
+  getRepositoryStats: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await analyzeRepository(input.projectId);
+    }),
 
   checkCredits: protectedProcedure.input(z.object({ githubUrl: z.string().min(1), githubToken: z.string().optional() })).
     mutation(async ({ ctx, input }) => {
@@ -29,9 +36,15 @@ export const projectRouter = createTRPCRouter({
       const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! } })
       if (!user) throw new Error("User not found")
       const currentCredits = user.credits || 0
-      console.log("token in checkCredits =>", input.githubToken );
+      console.log("token in create project =>", input.githubToken ? "provided" : "not provided");
 
       const fileCount = await checkCredits(input.githubUrl, input.githubToken)
+      
+      // If no file count could be determined (e.g., private repo without token), throw error
+      if (fileCount === 0 && !input.githubToken) {
+        throw new Error("Unable to access repository. It may be private and require a GitHub token, or the URL is invalid.")
+      }
+      
       if (currentCredits < fileCount) throw new Error("Not enough credits")
 
       const project = await ctx.db.$transaction(async (tx) => {
@@ -55,9 +68,11 @@ export const projectRouter = createTRPCRouter({
       
       await indexGithubRepo(project.id, input.githubUrl, input.githubToken);
       console.log('repo indexed')
+      // Always poll repo - now supports both token and token-free modes
       console.log('polling repo...')
-      await pollRepo(project.id, input.githubToken);
-            console.log('repo polled')
+      const pollRepoOptional = (await import('@/lib/github-commits')).pollRepoOptional;
+      await pollRepoOptional(project.id, input.githubToken);
+      console.log('repo polled')
       await ctx.db.user.update({ where: { id: ctx.user.userId! }, data: { credits: { decrement: fileCount } } })
       return project;
     }),
@@ -73,8 +88,10 @@ export const projectRouter = createTRPCRouter({
     });
   }),
   getCommits: protectedProcedure.input(z.object({ projectId: z.string() })).query(async ({ ctx, input }) => {
-    pollRepo(input.projectId).then((commits) => {
-      console.log(`polled ${commits.count} commits`)
+    // Use the new token-optional polling system
+    const { pollRepoOptional } = await import('@/lib/github-commits');
+    pollRepoOptional(input.projectId).then((commits) => {
+      console.log(`polled ${commits.length} commits`)
     }).catch(console.error)
     return await ctx.db.commit.findMany({
       where: { projectId: input.projectId },
