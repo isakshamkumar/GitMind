@@ -46,3 +46,13 @@ yarn-error.log*
 
 # idea files
 .idea
+
+# API keys and secrets (additional protection)
+*.key
+*.pem
+*api-key*
+*secret*
+*.secret
+config/secrets.json
+.env.production
+.env.staging
