@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar"
 import { UserButton } from "@clerk/nextjs"
 
-import { Bot, Calendar, ChevronDown, CreditCard, File, FolderTree, Home, Inbox, LayoutDashboard, Plus, Presentation, Search, Settings } from "lucide-react"
+import { Bot, Calendar, ChevronDown, CreditCard, File, FolderTree, Home, Inbox, LayoutDashboard, MessageCircle, Plus, Presentation, Search, Settings } from "lucide-react"
 import Logo from "./logo"
 import { cn } from "@/lib/utils"
 import { usePathname, useRouter } from "next/navigation"
@@ -36,6 +36,11 @@ const items = [
         title: "Q&A",
         url: "/qa",
         icon: Bot,
+    },
+    {
+        title: "Conversations",
+        url: "/conversations",
+        icon: MessageCircle,
     },
     {
         title: "Meetings",

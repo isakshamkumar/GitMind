@@ -35,6 +35,7 @@ const ChatCard = (props: Props) => {
     const [chatHistory, setChatHistory] = React.useState<ChatMessage[]>([])
     const [copiedMessageId, setCopiedMessageId] = React.useState<string | null>(null)
     const saveAnswer = api.question.saveAnswer.useMutation()
+    const saveConversation = api.conversation.saveConversation.useMutation()
     const { projectId } = useProject()
 
     const chatContainerRef = React.useRef<HTMLDivElement>(null)
@@ -44,6 +45,23 @@ const ChatCard = (props: Props) => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
+    }
+
+    // Get all unique files referenced in the conversation
+    const getAllReferencedFiles = () => {
+        const allFiles: any[] = []
+        chatHistory.forEach(msg => {
+            if (msg.role === 'assistant' && msg.filesReferenced) {
+                allFiles.push(...msg.filesReferenced)
+            }
+        })
+        
+        // Remove duplicates based on fileName
+        const uniqueFiles = allFiles.filter((file, index, self) => 
+            index === self.findIndex(f => f.fileName === file.fileName)
+        )
+        
+        return uniqueFiles
     }
 
     React.useEffect(() => {
@@ -77,7 +95,6 @@ const ChatCard = (props: Props) => {
 
         try {
             const { output, filesReferenced } = await generate(userMessage.content, projectId);
-            setFilesReferenced(filesReferenced);
             
             let accumulatedContent = '';
             for await (const delta of readStreamableValue(output)) {
@@ -92,6 +109,8 @@ const ChatCard = (props: Props) => {
                     );
                 }
             }
+            
+            // Files are now stored per message in chatHistory
         } catch (error) {
             setChatHistory(prev => 
                 prev.map(msg => 
@@ -107,7 +126,7 @@ const ChatCard = (props: Props) => {
 
     const clearChat = () => {
         setChatHistory([]);
-        setFilesReferenced([]);
+        // Files are now part of chatHistory, so no need to clear separately
     }
 
     const copyMessage = async (content: string, messageId: string) => {
@@ -120,20 +139,39 @@ const ChatCard = (props: Props) => {
     const saveCurrentChat = () => {
         if (chatHistory.length === 0) return;
         
-        const lastUserMessage = chatHistory.filter(msg => msg.role === 'user').slice(-1)[0];
-        const lastAssistantMessage = chatHistory.filter(msg => msg.role === 'assistant').slice(-1)[0];
+        // Generate a title from the first user message
+        const firstUserMessage = chatHistory.find(msg => msg.role === 'user');
+        const title = firstUserMessage?.content ? 
+            firstUserMessage.content.slice(0, 50) + (firstUserMessage.content.length > 50 ? '...' : '') : 
+            'Untitled Conversation';
         
-        if (lastUserMessage && lastAssistantMessage) {
-            saveAnswer.mutate({
-                projectId,
-                question: lastUserMessage.content,
-                answer: lastAssistantMessage.content,
-                filesReferenced: lastAssistantMessage.filesReferenced || []
-            }, {
-                onSuccess: () => toast.success('Chat saved to Q&A'),
-                onError: () => toast.error('Failed to save chat')
-            });
-        }
+        // Save as full conversation
+        saveConversation.mutate({
+            projectId,
+            title,
+            messages: chatHistory.filter(msg => msg.content.trim()).map(msg => ({
+                role: msg.role as 'user' | 'assistant',
+                content: msg.content,
+                filesReferenced: msg.role === 'assistant' ? (msg.filesReferenced || []) : []
+            }))
+        }, {
+            onSuccess: () => {
+                toast.success('Conversation saved successfully');
+                // Still save the last Q&A pair for backward compatibility
+                const lastUserMessage = chatHistory.filter(msg => msg.role === 'user').slice(-1)[0];
+                const lastAssistantMessage = chatHistory.filter(msg => msg.role === 'assistant').slice(-1)[0];
+                
+                if (lastUserMessage && lastAssistantMessage) {
+                    saveAnswer.mutate({
+                        projectId,
+                        question: lastUserMessage.content,
+                        answer: lastAssistantMessage.content,
+                        filesReferenced: lastAssistantMessage.filesReferenced || []
+                    });
+                }
+            },
+            onError: () => toast.error('Failed to save conversation')
+        });
     }
 
     const formatTime = (date: Date) => {
@@ -177,7 +215,7 @@ const ChatCard = (props: Props) => {
                                 Clear
                             </Button>
                             <Button 
-                                isLoading={saveAnswer.isPending} 
+                                isLoading={saveConversation.isPending || saveAnswer.isPending} 
                                 variant="outline" 
                                 size="sm"
                                 onClick={saveCurrentChat}
@@ -185,7 +223,7 @@ const ChatCard = (props: Props) => {
                                 className="h-8"
                             >
                                 <DownloadIcon className="w-3 h-3 mr-1.5" />
-                                Save
+                                Save Conversation
                             </Button>
                         </div>
                     </DialogHeader>
@@ -377,11 +415,11 @@ const ChatCard = (props: Props) => {
                                             <h3 className="text-sm font-medium">Referenced Files</h3>
                                         </div>
                                         <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                                            {filesReferenced.length}
+                                            {getAllReferencedFiles().length}
                                         </span>
                                     </div>
                                     <div className="flex-1 border rounded-lg bg-card overflow-hidden min-h-0">
-                                        <CodeReferences filesReferenced={filesReferenced} />
+                                        <CodeReferences filesReferenced={getAllReferencedFiles()} />
                                     </div>
                                 </div>
                             </ResizablePanel>
