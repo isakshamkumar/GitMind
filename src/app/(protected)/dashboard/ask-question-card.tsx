@@ -194,10 +194,7 @@ const ChatCard = (props: Props) => {
                     <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b flex-shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="relative">
-                                <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                                    <Sparkles className="h-5 w-5 text-white" />
-                                </div>
-                                <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background" />
+                                <Image src="/logo.png" alt="GitMind" width={32} height={32} />
                             </div>
                             <div>
                                 <DialogTitle className="text-lg font-semibold">GitMind Assistant</DialogTitle>
@@ -243,8 +240,8 @@ const ChatCard = (props: Props) => {
                                 {chatHistory.length === 0 && (
                                     <div className="flex items-center justify-center h-full">
                                         <div className="text-center space-y-4">
-                                            <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center">
-                                                <Sparkles className="h-8 w-8 text-white" />
+                                            <div className="h-16 w-16 rounded-2xl mx-auto flex items-center justify-center">
+                                                <Image src="/logo.png" alt="GitMind" width={64} height={64} />
                                             </div>
                                             <div>
                                                 <h3 className="text-lg font-semibold mb-2">Welcome to GitMind Chat</h3>
