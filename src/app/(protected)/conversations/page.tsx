@@ -1,9 +1,17 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import ConversationList from './conversation-list'
+
+const ConversationsPageContent = () => {
+    return (
+        <ConversationList />
+    )
+}
 
 const ConversationsPage = () => {
     return (
-        <ConversationList />
+        <Suspense fallback={<div>Loading conversations...</div>}>
+            <ConversationsPageContent />
+        </Suspense>
     )
 }
 

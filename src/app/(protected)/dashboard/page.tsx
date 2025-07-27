@@ -2,7 +2,7 @@
 import useProject from '@/hooks/use-project'
 import { ExternalLink, Github, GitBranch, Calendar, Users, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
-import React from 'react'
+import React, { Suspense } from 'react'
 import ChatCard from './ask-question-card'
 import CommitLog from './commit-log'
 import ArchiveButton from './archive-button'
@@ -16,7 +16,7 @@ import { api } from '@/trpc/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FileText, Code2, Target } from 'lucide-react'
 
-const DashboardPage = () => {
+const DashboardPageContent = () => {
     const { project, projectId } = useProject()
     const { data: stats, isLoading: statsLoading } = api.project.getRepositoryStats.useQuery(
         { projectId },
@@ -249,6 +249,14 @@ const DashboardPage = () => {
                 </TabsContent>
             </Tabs>
         </div>
+    )
+}
+
+const DashboardPage = () => {
+    return (
+        <Suspense fallback={<div>Loading dashboard...</div>}>
+            <DashboardPageContent />
+        </Suspense>
     )
 }
 

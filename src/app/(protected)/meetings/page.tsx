@@ -1,6 +1,6 @@
 'use client'
 import useProject from '@/hooks/use-project'
-import React from 'react'
+import React, { Suspense } from 'react'
 import MeetingCard from '../dashboard/meeting-card'
 import { api } from '@/trpc/react'
 import Link from 'next/link'
@@ -10,8 +10,7 @@ import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 import Image from 'next/image'
 
-
-const MeetingsPage = () => {
+const MeetingsPageContent = () => {
     const { project } = useProject()
     const { data: meetings, isLoading } = api.project.getAllMeetings.useQuery({ projectId: project?.id ?? '' }, {
         refetchInterval: 4000
@@ -83,6 +82,14 @@ const MeetingsPage = () => {
                 ))}
             </ul>
         </>
+    )
+}
+
+const MeetingsPage = () => {
+    return (
+        <Suspense fallback={<div>Loading meetings...</div>}>
+            <MeetingsPageContent />
+        </Suspense>
     )
 }
 

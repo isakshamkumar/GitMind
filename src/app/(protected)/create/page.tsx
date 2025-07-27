@@ -1,7 +1,7 @@
 'use client'
 import { api } from '@/trpc/react';
 import { useRouter } from 'next/navigation';
-import React, { useReducer, useRef } from 'react'
+import React, { Suspense, useReducer, useRef } from 'react'
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +31,7 @@ const loadingStates = [
     { text: "Finalizing project setup..." },
 ];
 
-const CreateProjectPage = () => {
+const CreateProjectPageContent = () => {
     const { register, handleSubmit, reset, watch } = useForm<FormInput>();
     const linkRepo = api.project.create.useMutation();
     const checkCredits = api.project.checkCredits.useMutation()
@@ -206,5 +206,13 @@ const CreateProjectPage = () => {
         </>
     );
 };
+
+const CreateProjectPage = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <CreateProjectPageContent />
+        </Suspense>
+    )
+}
 
 export default CreateProjectPage

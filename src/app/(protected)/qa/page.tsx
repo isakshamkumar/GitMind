@@ -1,9 +1,17 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import QuestionList from './question-list'
+
+const QAPageContent = () => {
+    return (
+        <QuestionList />
+    )
+}
 
 const QAPage = () => {
     return (
-        <QuestionList />
+        <Suspense fallback={<div>Loading questions...</div>}>
+            <QAPageContent />
+        </Suspense>
     )
 }
 
