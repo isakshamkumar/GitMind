@@ -181,12 +181,12 @@ const DashboardPage = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-center">
+                                <div className="text-center">
                                         <p className="text-muted-foreground">Repository analysis not available</p>
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            Switch to the Analysis tab for detailed insights
-                                        </p>
-                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        Switch to the Analysis tab for detailed insights
+                                    </p>
+                                </div>
                                 )}
                             </CardContent>
                         </Card>

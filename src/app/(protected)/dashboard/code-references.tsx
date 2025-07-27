@@ -81,22 +81,22 @@ const CodeReferences = ({ filesReferenced }: Props) => {
                 <div className="flex-shrink-0 border-b bg-muted/30 max-h-32 overflow-hidden">
                     <ScrollArea className="w-full h-full">
                         <div className="flex flex-wrap gap-1 p-2">
-                            {filesReferenced.map((file) => (
-                                <button
-                                    key={file.fileName}
-                                    onClick={() => setTab(file.fileName)}
+                    {filesReferenced.map((file) => (
+                        <button
+                            key={file.fileName}
+                            onClick={() => setTab(file.fileName)}
                                     className={`px-2 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 min-w-0 flex-shrink-0
-                                        ${tab === file.fileName
+                                ${tab === file.fileName
                                             ? "bg-primary text-primary-foreground shadow-sm"
                                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                        }`}
-                                >
+                                }`}
+                        >
                                     <FileIcon className="h-3 w-3 flex-shrink-0" />
                                     <span className="truncate max-w-[100px]" title={file.fileName}>
                                         {file.fileName.split('/').pop()}
                                     </span>
-                                </button>
-                            ))}
+                        </button>
+                    ))}
                         </div>
                     </ScrollArea>
                 </div>
@@ -122,11 +122,11 @@ const CodeReferences = ({ filesReferenced }: Props) => {
                                     <ScrollArea className="h-full">
                                         <div className="p-3">
                                             <div className="rounded-md overflow-hidden border">
-                                                <SyntaxHighlighter 
+                                    <SyntaxHighlighter 
                                                     language={getLanguageFromExtension(getFileExtension(file.fileName))}
-                                                    style={atomDark}
-                                                    customStyle={{
-                                                        margin: 0,
+                                        style={atomDark}
+                                        customStyle={{
+                                            margin: 0,
                                                         fontSize: '0.8rem',
                                                         lineHeight: '1.4',
                                                         background: 'transparent'
@@ -139,10 +139,10 @@ const CodeReferences = ({ filesReferenced }: Props) => {
                                                         paddingRight: '1em',
                                                         color: 'rgba(255,255,255,0.3)',
                                                         fontSize: '0.75rem'
-                                                    }}
-                                                >
-                                                    {file.sourceCode}
-                                                </SyntaxHighlighter>
+                                        }}
+                                    >
+                                        {file.sourceCode}
+                                    </SyntaxHighlighter>
                                             </div>
                                         </div>
                                     </ScrollArea>

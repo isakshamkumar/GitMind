@@ -40,8 +40,8 @@ const QuestionList = () => {
         <h1 className="text-2xl font-bold tracking-tight">Saved Q&A</h1>
         <p className="text-muted-foreground">
           Your saved questions and answers with GitMind AI assistant
-        </p>
-      </div>
+                  </p>
+                </div>
 
       {!questions || questions.length === 0 ? (
         <Card>
@@ -103,7 +103,7 @@ const QuestionList = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </SheetTrigger>
+            </SheetTrigger>
                 
                 {question && (
                   <SheetContent className="sm:max-w-[95vw] max-w-[95vw] h-[95vh] overflow-hidden flex flex-col">
@@ -118,8 +118,8 @@ const QuestionList = () => {
                             {formatDistanceToNow(question.createdAt, { addSuffix: true })}
                           </p>
                         </div>
-                      </div>
-                    </SheetHeader>
+      </div>
+          </SheetHeader>
                     
                     <div className="flex-1 min-h-0">
                       <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -171,9 +171,9 @@ const QuestionList = () => {
                         </ResizablePanel>
                       </ResizablePanelGroup>
                     </div>
-                  </SheetContent>
-                )}
-              </Sheet>
+        </SheetContent>
+      )}
+    </Sheet>
             )
           })}
         </div>
