@@ -25,7 +25,7 @@ export const featuresContent = [
   {
     title: "Centralized Knowledge Hub",
     description:
-      "CodeSaarthi.ai acts as a single source of truth, capturing and organizing knowledge from your codebase and team discussions in one accessible place. Eliminate knowledge silos forever.",
+      "GITMIND acts as a single source of truth, capturing and organizing knowledge from your codebase and team discussions in one accessible place. Eliminate knowledge silos forever.",
     content: (
       <CodeBlock
         language="json"
@@ -50,13 +50,13 @@ export const featuresContent = [
     content: (
       <CodeBlock
         language="javascript"
-        code={`import { CodeSaarthi } from '@codesaarthi/sdk';
+        code={`import { GitMind } from '@gitmind/sdk';
 
-const saarthi = new CodeSaarthi({ apiKey: '...' });
+const gitmind = new GitMind({ apiKey: '...' });
 
 // Automatically generate release notes from recent commits
 async function generateReleaseNotes() {
-  const notes = await saarthi.summarize({
+  const notes = await gitmind.summarize({
     repo: 'my-project',
     range: 'v1.2.0..HEAD',
     template: 'release-notes.md'
@@ -74,7 +74,7 @@ async function generateReleaseNotes() {
     content: (
      <CodeBlock
         language="bash"
-        code={`$ npx saarthi-cli analyze ./src
+        code={`$ npx gitmind-cli analyze ./src
 
 Analyzing codebase...
 

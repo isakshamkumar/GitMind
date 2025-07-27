@@ -10,7 +10,7 @@ import { generate } from './action'
 import { readStreamableValue } from 'ai/rsc'
 import CodeReferences from './code-references';
 import Image from 'next/image';
-import { DownloadIcon, MessageCircle, Send, User, Bot, Sparkles, Code2, Copy, CheckCircle } from 'lucide-react';
+import { DownloadIcon, MessageCircle, Send, User, Bot, Sparkles, Code2, Copy, CheckCircle, Loader2 } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { api } from '@/trpc/react';
 import useProject from '@/hooks/use-project';
@@ -215,14 +215,17 @@ const ChatCard = (props: Props) => {
                                 Clear
                             </Button>
                             <Button 
-                                isLoading={saveConversation.isPending || saveAnswer.isPending} 
                                 variant="outline" 
                                 size="sm"
                                 onClick={saveCurrentChat}
-                                disabled={chatHistory.length === 0}
+                                disabled={chatHistory.length === 0 || saveConversation.isPending || saveAnswer.isPending}
                                 className="h-8"
                             >
-                                <DownloadIcon className="w-3 h-3 mr-1.5" />
+                                {saveConversation.isPending || saveAnswer.isPending ? (
+                                    <Loader2 className="animate-spin mr-1.5" />
+                                ) : (
+                                    <DownloadIcon className="w-3 h-3 mr-1.5" />
+                                )}
                                 Save Conversation
                             </Button>
                         </div>

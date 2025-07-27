@@ -12,6 +12,7 @@ import { createCheckoutSession } from '@/lib/stripe';
 import { useLocalStorage } from 'usehooks-ts';
 import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 import { IconSquareRoundedX } from '@tabler/icons-react';
+import { Loader2 } from 'lucide-react';
 
 type FormInput = {
     repoUrl: string
@@ -190,8 +191,13 @@ const CreateProjectPage = () => {
                             }
 
                             <div className="h-4"></div>
-                            <Button type="submit" disabled={!hasEnoughCredits || isCreating} isLoading={linkRepo.isPending || checkCredits.isPending}>
-                                {checkCredits.data ? 'Create Project' : 'Check Credits'} <ArrowRight className='size-4' />
+                            <Button type="submit" disabled={!hasEnoughCredits || isCreating}>
+                                {linkRepo.isPending || checkCredits.isPending ? (
+                                    <Loader2 className="animate-spin mr-1.5" />
+                                ) : (
+                                    <ArrowRight className='size-4' />
+                                )}
+                                {checkCredits.data ? 'Create Project' : 'Check Credits'}
                             </Button>
                         </form>
                     </div>

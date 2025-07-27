@@ -62,7 +62,12 @@ export function AppSidebar() {
     return (
         <Sidebar collapsible="icon" variant="floating">
             <SidebarHeader>
-                <Logo />
+                <Link
+                    href="/"
+                    aria-label="home"
+                    className="flex items-center space-x-2">
+                    <Logo />
+                </Link>
             </SidebarHeader>
             <SidebarContent className="">
                 <SidebarGroup>
