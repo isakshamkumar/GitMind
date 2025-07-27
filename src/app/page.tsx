@@ -220,7 +220,7 @@ const menuItems = [
 const Logo = ({ className }: { className?: string }) => {
     return (
         <img
-            src="/logo.svg"
+            src="/logo.png"
             alt="GITMIND Logo"
             className={cn('h-5 w-auto', className)}
         />

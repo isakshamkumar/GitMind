@@ -41,44 +41,32 @@ const items = [
         title: "Conversations",
         url: "/conversations",
         icon: MessageCircle,
-    },
-    {
-        title: "Meetings",
-        url: "/meetings",
-        icon: Presentation,
-    },
-    {
-        title: "Billing",
-        url: "/billing",
-        icon: CreditCard,
-    },
+    }
 ]
 
 export function AppSidebar() {
     const router = useRouter()
     const { projects, projectId, setProjectId, isLoading } = useProject()
     const pathname = usePathname()
+    console.log(pathname);
+    
     const { open } = useSidebar()
     return (
         <Sidebar collapsible="icon" variant="floating">
             <SidebarHeader>
-                <Link
-                    href="/"
-                    aria-label="home"
-                    className="flex items-center space-x-2">
+               
                     <Logo />
-                </Link>
             </SidebarHeader>
             <SidebarContent className="">
                 <SidebarGroup>
                     <SidebarGroupLabel>Application</SidebarGroupLabel>
                     <SidebarGroupContent>
-                        <SidebarMenu>
+                        <SidebarMenu >
                             {items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
                                         <a href={item.url} className={cn({
-                                            '!bg-primary !text-white': pathname === item.url,
+                                            'border border-slate-400': pathname.includes(item.url),
                                         })}>
                                             <item.icon />
                                             <span>{item.title}</span>
@@ -98,7 +86,6 @@ export function AppSidebar() {
                                     <Skeleton key={index} className="w-full h-8" />
                                 ))}
                             </>)}
-
                             {projects?.map((project) => (
                                 <SidebarMenuItem key={project.id}>
                                     <SidebarMenuButton asChild>
@@ -113,13 +100,13 @@ export function AppSidebar() {
                                                 })}
                                             >
                                                 <div className="">
-                                                    <div className={cn("rounded-sm border size-6 flex items-center justify-center text-sm bg-white text-primary", {
-                                                        'bg-primary text-white': projectId === project.id,
+                                                    <div className={cn("rounded-sm border size-6 flex items-center justify-center text-sm bg-background text-foreground border-border", {
+                                                        'bg-primary text-primary-foreground border-primary': projectId === project.id,
                                                     })}>
                                                         {project.name[0]}
                                                     </div>
                                                 </div>
-                                                <span>{project.name}</span>
+                                                <span className="text-foreground">{project.name}</span>
                                             </div>
                                             {open && (
                                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
