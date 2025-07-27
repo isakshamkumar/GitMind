@@ -22,6 +22,7 @@ import { ReactIcon, TypescriptIcon, VscodeIcon } from "@/components/magicui/tech
 import { StickyScroll } from "@/components/ui/sticky-scroll-reveal";
 import { featuresContent } from "@/lib/constant";
 import { AnimatedGroup } from "@/components/ui/animated-group";
+import { CodeBlock } from "@/components/ui/code-block";
 import { 
   BookOpen,
   Code2,
@@ -211,15 +212,15 @@ function FixedStickyScroll({
 // --- NEW COMPONENTS START ---
 const menuItems = [
     { name: 'Features', href: '#features' },
-    { name: 'Solution', href: '#solutions' },
+    { name: 'Problems', href: '#problems' },
     { name: 'Testimonials', href: '#testimonials' },
-    { name: 'Contact', href: '#' }, // Changed to generic #
+    { name: 'Get Started', href: '#cta' },
 ]
 
 const Logo = ({ className }: { className?: string }) => {
     return (
         <img
-            src="/logo.png"
+            src="/logo.svg"
             alt="GITMIND Logo"
             className={cn('h-5 w-auto', className)}
         />
@@ -358,19 +359,19 @@ const testimonials = [
 
 const problems = [
   {
-    title: "Codebase Complexity",
+    title: "Complex Codebases",
     description:
-      "Navigating large and complex codebases can be a daunting task, leading to slower development cycles and increased onboarding time for new developers.",
+      "Modern applications have thousands of files, complex dependencies, and intricate architectures that make onboarding new developers and understanding existing code extremely challenging.",
   },
   {
-    title: "Knowledge Silos",
+    title: "Knowledge Fragmentation",
     description:
-      "Critical knowledge often resides in the minds of a few senior developers, creating bottlenecks and risking knowledge loss when team members leave.",
+      "Critical information about code decisions, business logic, and system architecture is scattered across documentation, comments, and team members' heads, leading to knowledge silos.",
   },
   {
-    title: "Inefficient Collaboration",
+    title: "Inefficient Code Reviews",
     description:
-      "Miscommunication and lack of shared understanding within development teams can lead to duplicated work, inconsistent code, and project delays.",
+      "Without proper context and understanding of the codebase, code reviews become superficial, missing potential issues and failing to maintain code quality standards.",
   },
 ];
 
@@ -427,12 +428,32 @@ const sampleFeaturesContent = [
     title: "AI Code Analysis",
     description: "Our advanced AI analyzes your entire codebase to provide instant insights, detect patterns, and suggest improvements. Get a bird's eye view of your project architecture.",
     content: (
-      <div className="h-full w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center rounded-xl">
-        <div className="text-white text-center p-8">
-          <Code className="mx-auto h-16 w-16 mb-4" />
-          <h3 className="text-xl font-bold mb-2">Smart Analysis</h3>
-          <p className="text-sm opacity-80">AI-powered code understanding</p>
-        </div>
+      <div className="h-full w-full flex items-center justify-center rounded-xl p-4">
+        <CodeBlock
+          language="typescript"
+          filename="src/app/page.tsx"
+          code={`// Ask a question in plain English
+// Q: Where is the user authentication logic handled?
+
+/**
+ * A: User authentication is handled in the following files:
+ * 1. src/lib/auth.ts - Main authentication middleware
+ * 2. src/app/api/auth/[...nextauth]/route.ts - Auth API routes
+ * 3. src/components/auth/LoginButton.tsx - Frontend auth UI
+ * 4. src/middleware.ts - Route protection logic
+ */
+
+export default function Page() {
+  return (
+    <div className="bg-background">
+      <HeroHeader />
+      <section className="relative overflow-hidden py-20">
+        {/* Hero content */}
+      </section>
+    </div>
+  );
+}`}
+        />
       </div>
     ),
   },
@@ -440,12 +461,36 @@ const sampleFeaturesContent = [
     title: "Team Collaboration",
     description: "Enable seamless collaboration with shared insights, real-time discussions, and synchronized understanding across your development team.",
     content: (
-      <div className="h-full w-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center rounded-xl">
-        <div className="text-white text-center p-8">
-          <Users className="mx-auto h-16 w-16 mb-4" />
-          <h3 className="text-xl font-bold mb-2">Team Sync</h3>
-          <p className="text-sm opacity-80">Collaborate like never before</p>
-        </div>
+      <div className="h-full w-full flex items-center justify-center rounded-xl p-4">
+        <CodeBlock
+          language="typescript"
+          filename="src/components/ChatCard.tsx"
+          code={`// Real-time team collaboration
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  filesReferenced?: CodeFile[];
+}
+
+const ChatCard = () => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  
+  const handleSubmit = async (question: string) => {
+    // AI analyzes codebase and provides context
+    const response = await generate(question, projectId);
+    setMessages(prev => [...prev, response]);
+  };
+
+  return (
+    <div className="chat-interface">
+      {messages.map(msg => (
+        <Message key={msg.id} message={msg} />
+      ))}
+    </div>
+  );
+};`}
+        />
       </div>
     ),
   },
@@ -453,12 +498,30 @@ const sampleFeaturesContent = [
     title: "Instant Q&A",
     description: "Ask questions about your codebase in natural language and get immediate, contextual answers. No more searching through documentation.",
     content: (
-      <div className="h-full w-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center rounded-xl">
-        <div className="text-white text-center p-8">
-          <MessageCircle className="mx-auto h-16 w-16 mb-4" />
-          <h3 className="text-xl font-bold mb-2">Smart Q&A</h3>
-          <p className="text-sm opacity-80">Get answers instantly</p>
-        </div>
+      <div className="h-full w-full flex items-center justify-center rounded-xl p-4">
+        <CodeBlock
+          language="typescript"
+          filename="src/lib/ai-analysis.ts"
+          code={`// Natural language code queries
+export const analyzeCodebase = async (question: string) => {
+  // AI understands context from entire codebase
+  const context = await getCodebaseContext();
+  
+  return {
+    answer: "The authentication flow uses NextAuth.js...",
+    filesReferenced: [
+      { fileName: "src/lib/auth.ts", relevance: 0.95 },
+      { fileName: "src/middleware.ts", relevance: 0.87 }
+    ],
+    codeSnippets: [
+      { file: "auth.ts", lines: "15-25", content: "..." }
+    ]
+  };
+};
+
+// Example query: "How does user authentication work?"
+// AI provides contextual answer with code references`}
+        />
       </div>
     ),
   },
@@ -466,12 +529,29 @@ const sampleFeaturesContent = [
     title: "Git Integration",
     description: "Seamlessly integrate with your Git workflow. Track changes, understand commit history, and get insights on code evolution over time.",
     content: (
-      <div className="h-full w-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center rounded-xl">
-        <div className="text-white text-center p-8">
-          <GitBranch className="mx-auto h-16 w-16 mb-4" />
-          <h3 className="text-xl font-bold mb-2">Git Integration</h3>
-          <p className="text-sm opacity-80">Version control insights</p>
-        </div>
+      <div className="h-full w-full flex items-center justify-center rounded-xl p-4">
+        <CodeBlock
+          language="typescript"
+          filename="src/lib/github-integration.ts"
+          code={`// Git integration and commit analysis
+export const analyzeCommits = async (repoUrl: string) => {
+  const commits = await getCommitHistory(repoUrl);
+  
+  return commits.map(commit => ({
+    hash: commit.sha,
+    message: commit.message,
+    author: commit.author.name,
+    date: commit.date,
+    aiSummary: await summarizeCommit(commit.diff),
+    filesChanged: commit.files,
+    impact: calculateImpact(commit)
+  }));
+};
+
+// AI summarizes each commit in plain English
+// Tracks code evolution and team collaboration patterns
+// Provides insights on code quality trends`}
+        />
       </div>
     ),
   },
@@ -556,7 +636,7 @@ export default function Page() {
 </section>
 
       {/* Problem Section */}
-      <section className="py-20 relative">
+      <section id="problems" className="py-20 relative">
         <DotPattern className="absolute inset-0 opacity-20" />
         <div className="container relative z-10">
           <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl">
@@ -619,7 +699,7 @@ export default function Page() {
       </section>
 
       {/* Animated Grid Pattern */}
-      <section className="py-20 relative">
+      <section id="cta" className="py-20 relative">
         <DotPattern className="absolute inset-0 opacity-20" />
         <div className="container relative z-10">
           <div className="relative flex h-96 w-full flex-col items-center justify-center overflow-hidden rounded-lg border bg-background md:shadow-xl">
