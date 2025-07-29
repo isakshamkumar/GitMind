@@ -94,12 +94,20 @@ const ChatCard = (props: Props) => {
         setChatHistory(prev => [...prev, assistantMessage]);
 
         try {
+            console.log('🔄 Calling generate function...');
             const { output, filesReferenced } = await generate(userMessage.content, projectId);
+            console.log('✅ Generate function returned successfully');
             
             let accumulatedContent = '';
+            let deltaCount = 0;
+            console.log('📖 Starting to read streamable value...');
             for await (const delta of readStreamableValue(output)) {
                 if (delta) {
                     accumulatedContent += delta;
+                    deltaCount++;
+                    if (deltaCount % 5 === 0) {
+                        console.log(`📝 Received ${deltaCount} deltas, current content length: ${accumulatedContent.length}`);
+                    }
                     setChatHistory(prev => 
                         prev.map(msg => 
                             msg.id === assistantMessage.id 
@@ -109,13 +117,26 @@ const ChatCard = (props: Props) => {
                     );
                 }
             }
+            console.log('✅ Stream reading completed, total deltas:', deltaCount, 'final content length:', accumulatedContent.length);
             
             // Files are now stored per message in chatHistory
         } catch (error) {
+            console.error('❌ Error in handleSubmit:', error);
+            console.error('❌ Error details:', {
+                name: error instanceof Error ? error.name : 'Unknown',
+                message: error instanceof Error ? error.message : 'Unknown error',
+                stack: error instanceof Error ? error.stack : 'No stack trace',
+                error: error
+            });
+            
+            const errorMessage = error instanceof Error 
+                ? `❌ Error: ${error.message}` 
+                : '❌ Sorry, I encountered an error processing your message. Please try again.';
+            
             setChatHistory(prev => 
                 prev.map(msg => 
                     msg.id === assistantMessage.id 
-                        ? { ...msg, content: '❌ Sorry, I encountered an error processing your message. Please try again.' }
+                        ? { ...msg, content: errorMessage }
                         : msg
                 )
             );
