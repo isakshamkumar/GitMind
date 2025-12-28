@@ -10,8 +10,65 @@ import { generate } from './action'
 import { readStreamableValue } from 'ai/rsc'
 import CodeReferences from './code-references';
 import Image from 'next/image';
-import { DownloadIcon, MessageCircle, Send, User, Bot, Sparkles, Code2, Copy, CheckCircle, Loader2 } from 'lucide-react';
+import { DownloadIcon, MessageCircle, Send, User, Bot, Sparkles, Code2, Copy, CheckCircle, Loader2, ChevronDown, ChevronRight, BrainCircuit } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+// ... (previous code)
+
+const ChatMessageContent = ({ content }: { content: string }) => {
+    const [thinkingOpen, setThinkingOpen] = React.useState(true);
+    
+    // Normalize thinking tags to a single canonical form before parsing
+    const normalized = content
+        .replace(/<think>/gi, '<thinking>')
+        .replace(/<\/think>/gi, '</thinking>');
+
+    // Parse content to extract thinking block (supports <think> and <thinking>)
+    const thinkingMatch = normalized.match(/<thinking>([\s\S]*?)<\/thinking>/i);
+    const thinkingContent = thinkingMatch ? thinkingMatch[1].trim() : null;
+
+    // Clean content by removing the thinking block completely
+    const cleanContent = normalized.replace(/<thinking>[\s\S]*?<\/thinking>/i, '').trim();
+
+    return (
+        <div className="space-y-3">
+            {thinkingContent && (
+                <Collapsible open={thinkingOpen} onOpenChange={setThinkingOpen} className="w-full">
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="flex items-center gap-2 p-0 h-auto hover:bg-transparent text-muted-foreground hover:text-foreground font-medium mb-2">
+                            <BrainCircuit className="w-4 h-4" />
+                            <span>AI Reasoning</span>
+                            {thinkingOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                        <div className="bg-yellow-50/50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800/30 rounded-lg p-3 text-sm text-muted-foreground">
+                            <MDEditor.Markdown 
+                                source={thinkingContent} 
+                                style={{ backgroundColor: 'transparent', fontSize: '0.875rem' }} 
+                            />
+                        </div>
+                    </CollapsibleContent>
+                </Collapsible>
+            )}
+            
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+                <MDEditor.Markdown 
+                    source={cleanContent || (thinkingContent ? "Generating answer..." : content)} 
+                    style={{ backgroundColor: 'transparent', fontSize: '0.875rem' }} 
+                />
+            </div>
+        </div>
+    );
+};
+
+// Replace usage in ChatCard render
+// ...
+// {msg.content ? (
+//     <ChatMessageContent content={msg.content} />
+// ) : (
+// ...
 import { api } from '@/trpc/react';
 import useProject from '@/hooks/use-project';
 import { toast } from 'sonner';
@@ -353,15 +410,7 @@ const ChatCard = (props: Props) => {
                                                                 <span className="text-xs text-muted-foreground">{formatTime(msg.timestamp)}</span>
                                                             </div>
                                                             {msg.content ? (
-                                                                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                                                                <MDEditor.Markdown 
-                                                                    source={msg.content} 
-                                                                    style={{ 
-                                                                        backgroundColor: 'transparent',
-                                                                        fontSize: '0.875rem'
-                                                                    }}
-                                                                />
-                                                                        </div>
+                                                                <ChatMessageContent content={msg.content} />
                                                             ) : (
                                                                 isLoading && msg.id === chatHistory[chatHistory.length - 1]?.id && (
                                                                     <div className="flex items-center gap-2 text-muted-foreground">

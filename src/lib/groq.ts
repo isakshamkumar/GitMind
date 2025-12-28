@@ -41,7 +41,7 @@ ${code}
 Give a summary no more than 250-300 words of the code above. Make sure you highlight all the important parts/pieces of code. That can include function/class names, methods, their uses, input/output, their flow and what it does, and all the key points of the code.`
                 }
             ],
-            model: "qwen/qwen3-32b", // Fast and capable model based on web search results
+            model: "openai/gpt-oss-120b", // Fast and capable model based on web search results
             temperature: 0.3, // Lower temperature for more consistent summaries
             max_completion_tokens: 400, // Slightly more than 300 words to be safe
             top_p: 0.95,
@@ -109,7 +109,7 @@ Git diff:
 ${diff}`
                 }
             ],
-            model: "qwen/qwen3-32b",
+            model: "openai/gpt-oss-120b",
             temperature: 0.1, // Lower temperature for more consistent output
             max_completion_tokens: 200, // Shorter to avoid verbose responses
             top_p: 0.95,
@@ -142,7 +142,7 @@ ${diff}`
 
 // Alternative models available on Groq (based on web search results)
 export const GROQ_MODELS = {
-    QWEN_3_32B: "qwen/qwen3-32b", // Fast and multilingual
+    GPT_OSS_120B: "openai/gpt-oss-120b", // Fast and multilingual
     LLAMA_4_SCOUT: "llama4-scout", // Function calling and vision
     LLAMA_3_3_70B: "llama-3.3-70b-versatile", // Large model
     GEMMA_2: "gemma2-9b-it" // Google's efficient model
@@ -157,13 +157,13 @@ export const selectBestGroqModel = (fileName: string): string => {
         case 'tsx':
         case 'js':
         case 'jsx':
-            return GROQ_MODELS.QWEN_3_32B; // Great for JavaScript/TypeScript
+            return GROQ_MODELS.GPT_OSS_120B; // Great for JavaScript/TypeScript
         case 'py':
             return GROQ_MODELS.LLAMA_3_3_70B; // Good for Python
         case 'md':
         case 'txt':
             return GROQ_MODELS.GEMMA_2; // Efficient for documentation
         default:
-            return GROQ_MODELS.QWEN_3_32B; // Default to Qwen for general use
+            return GROQ_MODELS.GPT_OSS_120B; // Default to Qwen for general use
     }
 }; 

@@ -19,6 +19,7 @@
     "@clerk/nextjs": "^6.0.2",
     "@google/generative-ai": "^0.21.0",
     "@hookform/resolvers": "^3.9.0",
+    "@huggingface/inference": "^4.7.1",
     "@langchain/core": "^0.3.15",
     "@prisma/client": "^5.14.0",
     "@radix-ui/react-accordion": "^1.2.1",

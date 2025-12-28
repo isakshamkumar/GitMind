@@ -278,6 +278,24 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string): P
 export const indexGithubRepo = async (projectId: string, githubUrl: string, githubToken?: string): Promise<void> => {
     const docs = await loadGithubRepo(githubUrl, githubToken);
     const allEmbeddings = await generateEmbeddings(docs);
+
+    // Ensure pgvector column dimensions match the embedding size (auto-upgrade)
+    const sample = allEmbeddings.find(e => e?.embeddings)?.embeddings;
+    if (sample && sample.length) {
+        try {
+            await db.$executeRawUnsafe(`
+                ALTER TABLE "SourceCodeEmbedding"
+                ALTER COLUMN "summaryEmbedding" TYPE vector(${sample.length});
+            `);
+            await db.$executeRawUnsafe(`
+                ALTER TABLE "MeetingEmbedding"
+                ALTER COLUMN "embedding" TYPE vector(${sample.length});
+            `);
+            console.log(`✅ Ensured vector dimensions = ${sample.length}`);
+        } catch (err) {
+            console.warn('Could not alter vector dimensions automatically. Please ensure pgvector columns match embedding length.', err);
+        }
+    }
     
     const limit = pLimit(3); // Further reduce concurrency to avoid hitting AI API rate limits
     await Promise.allSettled(
@@ -323,15 +341,16 @@ export const indexGithubRepo = async (projectId: string, githubUrl: string, gith
 };
 
 async function generateEmbeddings(docs: GitMindDocument[]) {
-    return await Promise.all(docs.map(async (doc) => {
+    const limit = pLimit(5); // Limit concurrency to 5
+    return await Promise.all(docs.map(doc => limit(async () => {
         try {
         const summary = await getSummary(doc);
         if (!summary) return null;
             
-        const embeddings = await getEmbeddings(summary);
+            const embeddings = await getEmbeddings(summary);
         return {
             summary,
-            embeddings,
+                embeddings: embeddings.slice(0, 768), // ensure fits pgvector column
                 sourceCode: doc.pageContent,
             fileName: doc.metadata.source,
         };
@@ -339,5 +358,5 @@ async function generateEmbeddings(docs: GitMindDocument[]) {
             console.error(`Failed to generate embedding for ${doc.metadata.source}:`, error);
             return null;
         }
-    }));
+    })));
 }
